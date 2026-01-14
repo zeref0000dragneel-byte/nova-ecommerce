@@ -1,11 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/app/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import VariantsManager from './VariantsManager'; // ✅ NUEVO
-
-const prisma = new PrismaClient();
+import VariantsManager from './VariantsManager';
 
 async function getProduct(id: string) {
   const product = await prisma.product.findUnique({

@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { requireAuth } from '@/app/lib/auth';
+import { prisma } from '@/app/lib/prisma';
 
 async function getStats() {
   const [productsCount, categoriesCount, ordersCount, customersCount] = await Promise.all([
@@ -27,6 +27,10 @@ async function getStats() {
 }
 
 export default async function AdminDashboard() {
+  // 🔒 Verificar autenticación PRIMERO
+  await requireAuth('/admin');
+
+  // Obtener datos solo si está autenticado
   const stats = await getStats();
 
   return (

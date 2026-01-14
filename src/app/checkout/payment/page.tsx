@@ -7,42 +7,28 @@ import { Loader2 } from 'lucide-react';
 function PaymentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const orderId = searchParams.get('orderId');
+  const paymentId = searchParams.get('payment_id');
+  const status = searchParams.get('status');
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!orderId) {
-      router.push('/cart');
+    // Si viene de MercadoPago con un payment_id, verificar el estado
+    if (paymentId) {
+      // El webhook debería haber procesado el pago
+      // Redirigir según el status
+      if (status === 'approved') {
+        router.push('/checkout/success');
+      } else {
+        router.push('/checkout/failure');
+      }
       return;
     }
 
-    const createPreference = async () => {
-      try {
-        const response = await fetch('/api/mercadopago/create-preference', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Error al crear preferencia de pago');
-        }
-
-        const { initPoint } = await response.json();
-        
-        // Redirigir a MercadoPago
-        window.location.href = initPoint;
-      } catch (err) {
-        console.error('Error:', err);
-        setError('Hubo un error al procesar el pago. Intenta de nuevo.');
-        setLoading(false);
-      }
-    };
-
-    createPreference();
-  }, [orderId, router]);
+    // Si no hay payment_id, redirigir al carrito
+    router.push('/cart');
+  }, [paymentId, status, router]);
 
   if (error) {
     return (

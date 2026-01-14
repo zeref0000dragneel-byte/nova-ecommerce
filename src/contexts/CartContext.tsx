@@ -30,23 +30,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Cargar carrito desde localStorage al montar
+  // Cargar carrito desde localStorage al montar (solo en cliente)
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error("Error loading cart:", error);
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const savedCart = localStorage.getItem("cart");
+      if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        // Validar que los datos sean válidos
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
       }
+    } catch (error) {
+      console.error("Error loading cart:", error);
+      localStorage.removeItem("cart");
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, []);
 
   // Guardar carrito en localStorage cada vez que cambie
   useEffect(() => {
-    if (isLoaded) {
+    if (!isLoaded || typeof window === 'undefined') return;
+    
+    try {
       localStorage.setItem("cart", JSON.stringify(items));
+    } catch (error) {
+      console.error("Error saving cart:", error);
     }
   }, [items, isLoaded]);
 

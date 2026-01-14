@@ -97,6 +97,8 @@ model Customer {
   city      String?                             // Ciudad (opcional)
   state     String?                             // Estado/Provincia (opcional)
   zipCode   String?                             // Código postal (opcional)
+  latitude  Float?                              // Latitud de la ubicación (Google Maps)
+  longitude Float?                              // Longitud de la ubicación (Google Maps)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   

@@ -3,27 +3,44 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle, Loader2, Package } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
+import Header from '@/components/Header';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const orderId = searchParams.get('orderId');
+  const { clearCart } = useCart();
+  const paymentId = searchParams.get('payment_id');
   
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderId) {
+    const paymentId = searchParams.get('payment_id');
+    
+    if (!paymentId) {
       router.push('/');
       return;
     }
 
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`/api/orders/${orderId}`);
+        // Buscar la orden por paymentId
+        const response = await fetch(`/api/orders?paymentId=${paymentId}`);
         if (response.ok) {
-          const data = await response.json();
-          setOrder(data.order);
+          const orders = await response.json();
+          if (orders.length > 0) {
+            setOrder(orders[0]);
+            
+            // Limpiar carrito solo si la orden fue encontrada y pagada
+            clearCart();
+            
+            // Limpiar datos de checkout
+            const checkoutData = localStorage.getItem('checkout_data');
+            if (checkoutData) {
+              localStorage.removeItem('checkout_data');
+            }
+          }
         }
       } catch (error) {
         console.error('Error al cargar pedido:', error);
@@ -33,7 +50,7 @@ function SuccessContent() {
     };
 
     fetchOrder();
-  }, [orderId, router]);
+  }, [paymentId, clearCart]);
 
   if (loading) {
     return (
@@ -44,9 +61,10 @@ function SuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <Header />
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 text-center border border-gray-100">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>

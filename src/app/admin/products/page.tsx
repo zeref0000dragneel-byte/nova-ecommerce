@@ -1,11 +1,9 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/app/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-
-const prisma = new PrismaClient();
 
 async function getProducts() {
   const products = await prisma.product.findMany({

@@ -12,16 +12,21 @@ const nextConfig: NextConfig = {
         hostname: 'http2.mlstatic.com',
       },
     ],
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  // Next.js 16: eslint config movido a experimental
   experimental: {
-    // Deshabilitar TypeScript y ESLint en builds
     typedRoutes: false,
   },
-  // Next.js 16: typescript config sigue funcionando
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  compress: true,
+  poweredByHeader: false,
 };
 
 export default nextConfig;

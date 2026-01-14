@@ -198,10 +198,17 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
+    const paymentId = searchParams.get('paymentId');
 
-    const where = status && status !== 'all' 
-      ? { status: status as OrderStatus } 
-      : {};
+    const where: any = {};
+    
+    if (status && status !== 'all') {
+      where.status = status as OrderStatus;
+    }
+    
+    if (paymentId) {
+      where.paymentId = paymentId;
+    }
 
     const orders = await prisma.order.findMany({
       where,
@@ -210,7 +217,7 @@ export async function GET(request: NextRequest) {
         items: {
           include: {
             product: true,
-            variant: true, // ✅ NUEVO: Incluir variantes en pedidos
+            variant: true,
           },
         },
       },

@@ -5,12 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '@/contexts/CartContext';
 import { ShoppingCart, CreditCard, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import LocationPicker from '@/components/LocationPicker';
+import Header from '@/components/Header';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice } = useCart();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [location, setLocation] = useState<{
+    address: string;
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -37,7 +44,10 @@ export default function CheckoutPage() {
     } else if (!/^\d{10}$/.test(formData.phone.replace(/\s/g, ''))) {
       newErrors.phone = 'Teléfono inválido (10 dígitos)';
     }
-    if (!formData.address.trim()) newErrors.address = 'La dirección es requerida';
+    // Validar dirección (puede venir del LocationPicker o manual)
+    if (!location && !formData.address.trim()) {
+      newErrors.address = 'La dirección es requerida';
+    }
     if (!formData.city.trim()) newErrors.city = 'La ciudad es requerida';
     if (!formData.state.trim()) newErrors.state = 'El estado es requerido';
     if (!formData.zipCode.trim()) {
@@ -64,34 +74,57 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const orderResponse = await fetch('/api/orders', {
+      // Usar dirección del LocationPicker si está disponible, sino usar la manual
+      const finalAddress = location?.address || formData.address;
+      const shippingAddress = location
+        ? `${finalAddress}, ${formData.city}, ${formData.state}, CP: ${formData.zipCode}`
+        : `${formData.address}, ${formData.city}, ${formData.state}, CP: ${formData.zipCode}`;
+
+      // Crear preferencia de pago SIN crear la orden todavía
+      const preferenceResponse = await fetch('/api/checkout/create-preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer: formData,
+          customer: {
+            ...formData,
+            address: finalAddress,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            latitude: location?.lat || undefined,
+            longitude: location?.lng || undefined,
+          },
           items: items.map((item) => ({
             productId: item.id,
-            variantId: item.variantId || null, // ✅ NUEVO: Enviar variantId
+            variantId: item.variantId || null,
             quantity: item.quantity,
             price: item.price,
           })),
-          total: totalPrice,
-          shippingAddress: `${formData.address}, ${formData.city}, ${formData.state}, CP: ${formData.zipCode}`,
+          total: finalTotal,
+          shippingAddress: shippingAddress,
           notes: formData.notes,
         }),
       });
 
-      if (!orderResponse.ok) {
-        throw new Error('Error al crear el pedido');
+      if (!preferenceResponse.ok) {
+        const errorData = await preferenceResponse.json();
+        throw new Error(errorData.error || 'Error al crear preferencia de pago');
       }
 
-      const { order } = await orderResponse.json();
+      const { initPoint } = await preferenceResponse.json();
 
-      clearCart();
-      router.push(`/checkout/payment?orderId=${order.id}`);
-    } catch (error) {
+      // Guardar datos del checkout en localStorage por si el usuario regresa
+      localStorage.setItem('checkout_data', JSON.stringify({
+        customer: formData,
+        items: items,
+        timestamp: Date.now(),
+      }));
+
+      // Redirigir directamente a MercadoPago
+      window.location.href = initPoint;
+    } catch (error: any) {
       console.error('Error:', error);
-      alert('Hubo un error al procesar tu pedido. Intenta de nuevo.');
+      alert(error.message || 'Hubo un error al procesar tu pedido. Intenta de nuevo.');
       setLoading(false);
     }
   };
@@ -132,19 +165,22 @@ export default function CheckoutPage() {
   const finalTotal = totalPrice + shipping;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <Header />
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
+        <p className="text-gray-600 mb-8">Completa tu información para finalizar la compra</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Formulario */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <CreditCard className="w-6 h-6 text-blue-600" />
                 Información de Envío
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Nombre Completo *
@@ -204,9 +240,28 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
+                {/* Selector de Ubicación con Google Maps */}
+                <LocationPicker
+                  onLocationSelect={(loc) => {
+                    setLocation(loc);
+                    // Extraer ciudad y estado de la dirección si es posible
+                    if (loc.address) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        address: loc.address,
+                      }));
+                    }
+                  }}
+                  initialAddress={formData.address}
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+                )}
+
+                {/* Campo de dirección manual (fallback) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dirección *
+                    Dirección Manual (si no usaste el selector)
                   </label>
                   <input
                     type="text"
@@ -214,13 +269,10 @@ export default function CheckoutPage() {
                     value={formData.address}
                     onChange={handleChange}
                     placeholder="Calle Example #123, Col. Centro"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                      errors.address ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${
+                      errors.address ? 'border-red-500' : 'border-gray-200'
                     }`}
                   />
-                  {errors.address && (
-                    <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -300,7 +352,7 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                 >
                   {loading ? (
                     <>
@@ -320,8 +372,9 @@ export default function CheckoutPage() {
 
           {/* Resumen del Pedido */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 sticky top-24 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <ShoppingCart className="w-6 h-6 text-blue-600" />
                 Resumen del Pedido
               </h2>
 
