@@ -23,10 +23,10 @@ export async function GET() {
           slug: 'iphone-15-pro',
           description: 'Último modelo de Apple',
           price: 25999.00,
-          comparePrice: 28999.00,
+          compareAtPrice: 28999.00,
           stock: 15,
           categoryId: category.id,
-          imageUrl: 'https://via.placeholder.com/400/0000FF/FFFFFF?text=iPhone',
+          images: ['https://via.placeholder.com/400/0000FF/FFFFFF?text=iPhone'], // <--- ¡CAMBIO!
         },
         {
           name: 'MacBook Air M2',
@@ -35,7 +35,7 @@ export async function GET() {
           price: 32999.00,
           stock: 8,
           categoryId: category.id,
-          imageUrl: 'https://via.placeholder.com/400/FF0000/FFFFFF?text=MacBook',
+          images: ['https://via.placeholder.com/400/FF0000/FFFFFF?text=MacBook'], // <--- ¡CAMBIO!
         },
         {
           name: 'AirPods Pro',
@@ -44,7 +44,7 @@ export async function GET() {
           price: 5999.00,
           stock: 25,
           categoryId: category.id,
-          imageUrl: 'https://via.placeholder.com/400/00FF00/FFFFFF?text=AirPods',
+          images: ['https://via.placeholder.com/400/00FF00/FFFFFF?text=AirPods'], // <--- ¡CAMBIO!
         },
       ],
       skipDuplicates: true,
