@@ -134,7 +134,7 @@ export default async function EditProductPage({
         <div className="space-y-6">
           {/* Product Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="name" className="block font-medium text-gray-700 mb-2">
               Nombre del Producto *
             </label>
             <input
@@ -143,14 +143,14 @@ export default async function EditProductPage({
               name="name"
               required
               defaultValue={product.name}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900"
               placeholder="Ej: iPhone 15 Pro"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="description" className="block font-medium text-gray-700 mb-2">
               Descripción *
             </label>
             <textarea
@@ -159,7 +159,7 @@ export default async function EditProductPage({
               required
               rows={4}
               defaultValue={product.description || ''}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none text-gray-900"
+              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 resize-none text-gray-900"
               placeholder="Describe las características principales del producto..."
             />
           </div>
@@ -167,11 +167,11 @@ export default async function EditProductPage({
           {/* Price and Stock */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="price" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="price" className="block font-medium text-gray-700 mb-2">
                 Precio Base (MXN) *
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-3.5 text-gray-500 font-medium">$</span>
+                <span className="absolute left-4 top-2.5 text-gray-500 font-medium">$</span>
                 <input
                   type="number"
                   id="price"
@@ -180,7 +180,7 @@ export default async function EditProductPage({
                   step="0.01"
                   min="0"
                   defaultValue={product.price}
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+                  className="w-full pl-8 pr-4 py-2 border-2 border-gray-300 focus:border-blue-500 rounded-lg text-gray-900"
                   placeholder="0.00"
                 />
               </div>
@@ -190,7 +190,7 @@ export default async function EditProductPage({
             </div>
 
             <div>
-              <label htmlFor="stock" className="block text-sm font-semibold text-gray-700 mb-2">
+              <label htmlFor="stock" className="block font-medium text-gray-700 mb-2">
                 Stock Base (unidades) *
               </label>
               <input
@@ -200,7 +200,7 @@ export default async function EditProductPage({
                 required
                 min="0"
                 defaultValue={product.stock}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+                className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900"
                 placeholder="0"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -211,7 +211,7 @@ export default async function EditProductPage({
 
           {/* Category */}
           <div>
-            <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="categoryId" className="block font-medium text-gray-700 mb-2">
               Categoría *
             </label>
             <select
@@ -219,7 +219,7 @@ export default async function EditProductPage({
               name="categoryId"
               required
               defaultValue={product.categoryId}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 bg-white text-gray-900"
             >
               <option value="">Selecciona una categoría</option>
               {categories.map((category) => (
@@ -232,7 +232,7 @@ export default async function EditProductPage({
 
           {/* Image URL */}
           <div>
-            <label htmlFor="imageUrl" className="block text-sm font-semibold text-gray-700 mb-2">
+            <label htmlFor="imageUrl" className="block font-medium text-gray-700 mb-2">
               URL de la Imagen Principal (opcional)
             </label>
             <input
@@ -240,7 +240,7 @@ export default async function EditProductPage({
               id="imageUrl"
               name="imageUrl"
               defaultValue={currentImage ?? ''}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900"
               placeholder="https://ejemplo.com/imagen.jpg"
             />
             <p className="text-sm text-gray-500 mt-2">
@@ -252,7 +252,7 @@ export default async function EditProductPage({
           <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-md"
             >
               Guardar Cambios
             </button>

@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   description: "Encuentra los mejores productos al mejor precio. Envío gratis en compras mayores a $500. E-commerce completo y seguro.",
   keywords: ["tienda", "ecommerce", "productos", "compras online", "envío gratis"],
   authors: [{ name: "Mi Tienda Virtual" }],
+  icons: {
+    icon: "/Fabicon.ico", // Referencia al favicon en la carpeta public
+  },
   openGraph: {
     type: "website",
     locale: "es_MX",
@@ -48,9 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body
-        className={`${inter.variable} antialiased`}
-      >
+      <body className={`${inter.variable} antialiased`}>
         <CartProvider>
           {children}
         </CartProvider>
