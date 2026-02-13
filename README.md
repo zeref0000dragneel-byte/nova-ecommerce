@@ -103,12 +103,16 @@ Plataforma completa de e-commerce con panel de administración, gestión de prod
 - **Diseño responsive** mobile-first con Tailwind
 - **Deploy y optimización** en Vercel
 
-## 🎨 Paleta de Colores
+🎨 Paleta de Colores NØVA
 
-- **Primary:** `#16a34a` (Verde) - CTAs principales
-- **Secondary:** `#ef4444` (Rojo coral) - Botones secundarios
-- **Background Admin:** `#1e293b` (Slate oscuro)
-- **Accent:** `#0ea5e9` (Azul) - Links y acentos
+Primary: #000000 (Negro) - Botones principales, títulos
+Background: #ffffff (Blanco) - Fondos principales
+Gray Border: #e5e5e5 (Gray 200) - Bordes y divisores
+Gray Text: #525252 (Gray 600) - Texto secundario
+Success: #16a34a (Verde) - Toast success, estados positivos
+Error: #dc2626 (Rojo) - Errores y validaciones
+Admin Dark: #18181b (Zinc 900) - Sidebar admin
+Footer: #000000 (Negro) - Fondo footer
 
 ## 📊 Características Técnicas
 
@@ -136,10 +140,10 @@ Plataforma completa de e-commerce con panel de administración, gestión de prod
 ![Desktop - Hero](public/ecommerce-desktop-hero.png)
 *Vista principal con productos destacados*
 
-![Desktop - Vista de Producto](public/ecommerce-desktop-heroS.png)
+![Desktop - Vista de Producto](public/ecommerce-desktop-heroS2.png)
 *Detalle de producto individual*
 
-![Mobile - Productos](public/ecommerce-mobile-hero.png)
+![Mobile - Productos](public/ecommerce-mobile-hero2.png)
 *Navegación móvil optimizada*
 
 ![iPad - Vista Responsiva](public/ecommerce-ipad-hero.png)
