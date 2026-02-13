@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -12,6 +13,18 @@ import {
 export type WeeklySalesPoint = { day: string; ventas: number };
 
 export default function SalesChart({ data }: { data: WeeklySalesPoint[] }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Solución al error de Vercel: Esperar a que el componente monte en el cliente
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    // Placeholder con la misma altura que el gráfico para evitar saltos visuales
+    return <div className="h-[180px] w-full" />;
+  }
+
   if (!data.length) {
     return (
       <div className="h-[180px] flex items-center justify-center text-[12px] text-zinc-400">
