@@ -1,215 +1,243 @@
-# 🛒 Mi Tienda - Premium E-commerce
+# NØVA — Minimalist Tech E-commerce
 
-Plataforma completa de e-commerce con panel de administración, gestión de productos, categorías y pedidos en tiempo real.
+Plataforma de e-commerce minimalista optimizada para móvil, diseñada bajo la filosofía "Menos, pero mejor". Stack moderno con Next.js 16, Supabase, Prisma y MercadoPago.
 
 ![Hero Desktop](public/ecommerce-desktop-heroS.png)
 
 ## ✨ Características Principales
 
-### 🏪 **Tienda Online**
-- 🛍️ Catálogo de productos responsive con grid adaptable
-- 🛒 Carrito de compras funcional con gestión de cantidades
-- 💳 Sistema de checkout con validación
-- 🔍 Navegación intuitiva entre categorías
-- 📱 100% responsive - Mobile-first design
+### 🏪 **Tienda Online Premium**
+- 🎨 Diseño minimalista estilo Linear/Stripe/Apple
+- 📱 **Mobile-first** - Optimizado al 100% para dispositivos móviles
+- 🛒 Carrito con drawer lateral animado (Sheet)
+- 💳 Integración completa con **MercadoPago**
+- 🔔 Notificaciones toast premium (Sonner)
+- 🖼️ Gestión de variantes con imágenes específicas
+- ⚡ Lazy loading con blur placeholders
 
 ### 🎛️ **Panel de Administración**
-- 📊 Dashboard con métricas en tiempo real
-- 📦 Gestión completa de productos (CRUD)
-- 🏷️ Sistema de categorías con slugs
-- 📋 Gestión de pedidos y estados
-- 👥 Administración de clientes
-- 💰 Monitoreo de ingresos y stock
+- 📊 Dashboard estilo startup (métricas + gráficas)
+- 📦 CRUD completo de productos con variantes
+- 🏷️ Gestión de categorías
+- 📋 Sistema de órdenes con webhooks
+- 🔐 Autenticación protegida
+- 📈 Gráfica de ventas (Recharts)
 
 ## 🛠️ Stack Técnico
 
-- **Framework:** Next.js 14 (App Router)
-- **Frontend:** React 18
+- **Framework:** Next.js 16 (App Router + Turbopack)
+- **Database:** Supabase (PostgreSQL)
+- **ORM:** Prisma 5.22
+- **Pagos:** MercadoPago API
 - **Estilos:** Tailwind CSS
+- **Uploads:** Cloudinary
 - **Lenguaje:** TypeScript
-- **Despliegue:** Vercel
-- **Gestión de Estado:** React Hooks + Context API
+- **Deployment:** Vercel
 
 ## 🚀 Demo en Vivo
 
-🔗 **Tienda:** [https://ecommerce-nextjs-ajfzj9b0o-zerefs-projects-3dfc6c82.vercel.app](https://ecommerce-nextjs-ajfzj9b0o-zerefs-projects-3dfc6c82.vercel.app)
+🔗 **Tienda:** [https://nova-ecommerce-gamma.vercel.app/](https://nova-ecommerce-gamma.vercel.app/)
 
-🔗 **Panel Admin:** [https://ecommerce-nextjs-ajfzj9b0o-zerefs-projects-3dfc6c82.vercel.app/admin](https://ecommerce-nextjs-ajfzj9b0o-zerefs-projects-3dfc6c82.vercel.app/admin)
+🔗 **Panel Admin:** [https://nova-ecommerce-gamma.vercel.app/admin](https://nova-ecommerce-gamma.vercel.app/admin)
+
+**Credenciales Admin:**
+- Usuario: `Admin`
+- Contraseña: `21222324`
 
 ## 📱 Diseño Responsive
 
-<img src="public/ecommerce-mobile-hero.png" width="300" alt="Vista móvil">
+<img src="public/ecommerce-mobile-hero.png" width="300" alt="Vista móvil NØVA">
 
-## 🎯 Funcionalidades Detalladas
+**Optimizaciones Móvil:**
+- Hero con imagen en layout 2 columnas (desktop) → stacked (móvil)
+- Grid de productos: 2 columnas perfectamente alineadas
+- Sheet lateral con backdrop blur para navegación
+- Badge animado del carrito (escala en cada adición)
+- Toast con imagen del producto agregado
+- Botón sticky en página de producto
 
-### Tienda (Frontend)
+## 🎯 Funcionalidades Destacadas
 
-1. **Hero Section**
-   - Diseño atractivo con call-to-action
-   - Mensaje de bienvenida personalizado
-   - Promoción de envío gratis
+### **Sistema de Variantes**
+- Selector de color con preview visual
+- Selector de talla con estados activos
+- Imagen específica por variante en carrito
+- Gestión de stock por variante
 
-2. **Catálogo de Productos**
-   - Grid responsive (1-3 columnas según dispositivo)
-   - Información detallada (precio, descripción, categoría)
-   - Indicadores de stock disponible
-   - Vista de detalle de producto individual
+### **Checkout Completo**
+- Formulario de envío con LocationPicker
+- Validación en tiempo real
+- Creación de preferencia de pago (MercadoPago)
+- Redirección a checkout seguro
+- Webhooks para actualización de estados
 
-3. **Carrito de Compras**
-   - Agregar/eliminar productos
-   - Modificar cantidades
-   - Contador de items en header
-   - Cálculo automático de totales
+### **Panel Admin Nivel Startup**
+- Breadcrumbs dinámicos
+- Metric Cards con skeletons de carga
+- Tablas limpias con acciones hover
+- Gráficas de ventas (línea negra minimalista)
+- Notificaciones Sonner para feedback
 
-4. **Sección de Beneficios**
-   - Envío gratis en compras +$500
-   - Compra segura con encriptación
-   - Entrega rápida (3-5 días)
+## 🎨 Design System
 
-### Panel Admin (Backend)
+**Filosofía:** Blanco y negro puro. Sin gradientes. Bordes finos. Mucho aire.
 
-1. **Dashboard de Gestión de Pedidos**
-   - Total de pedidos registrados
-   - Ingresos totales en tiempo real
-   - Estado de pedidos (pendientes/entregados)
-   - Buscador por número de orden, cliente o email
-   - Tabla completa con toda la información
+**Paleta de Colores:**
+- **Primary:** `#000000` (Negro) - Botones principales
+- **Background:** `#ffffff` (Blanco) - Fondos
+- **Border:** `#e5e5e5` (Gray 200) - Divisores
+- **Text Secondary:** `#525252` (Gray 600)
+- **Success:** `#16a34a` (Verde) - Estados positivos
+- **Error:** `#dc2626` (Rojo) - Validaciones
+- **Admin:** `#18181b` (Zinc 900) - Sidebar oscuro
 
-2. **Gestión de Productos**
-   - CRUD completo (Crear, Leer, Actualizar, Eliminar)
-   - 11 productos de ejemplo pre-cargados
-   - Gestión de stock por producto
-   - Categorización automática
-   - Información de disponibilidad
+**Tipografía:** Geist Sans (Variable font)
 
-3. **Sistema de Categorías**
-   - 7 categorías activas (Automóviles, Belleza, Electrónica, Hogar, Libros, Música, Tecnología)
-   - Slugs automáticos para URLs amigables
-   - Contador de productos por categoría
-   - Promedio de productos por categoría
+**Animaciones:** `duration-300`, `active:scale-[0.98]`, `backdrop-blur`
 
-4. **Gestión de Clientes**
-   - Registro y seguimiento de clientes
-   - Historial de compras
+## 💡 Casos de Uso Premium
 
-## 💡 Aprendizajes Clave
+✅ **Startups de tech minimalista**  
+✅ **Tiendas de productos digitales**  
+✅ **Negocios con catálogos curados**  
+✅ **Freelancers vendiendo templates/assets**  
 
-- **Arquitectura completa de e-commerce** desde cero
-- **Next.js App Router** con rutas dinámicas y anidadas
-- **Sistema de autenticación** para panel admin
-- **CRUD completo** con operaciones en tiempo real
-- **Gestión de estado global** sin Redux
-- **TypeScript** para type-safety en toda la app
-- **Diseño responsive** mobile-first con Tailwind
-- **Deploy y optimización** en Vercel
+## 📊 Performance
 
-🎨 Paleta de Colores NØVA
-
-Primary: #000000 (Negro) - Botones principales, títulos
-Background: #ffffff (Blanco) - Fondos principales
-Gray Border: #e5e5e5 (Gray 200) - Bordes y divisores
-Gray Text: #525252 (Gray 600) - Texto secundario
-Success: #16a34a (Verde) - Toast success, estados positivos
-Error: #dc2626 (Rojo) - Errores y validaciones
-Admin Dark: #18181b (Zinc 900) - Sidebar admin
-Footer: #000000 (Negro) - Fondo footer
-
-## 📊 Características Técnicas
-
-### Performance
-- ⚡ Server-side rendering con Next.js
-- 🚀 Carga optimizada de imágenes
+- ⚡ Server-side rendering (SSR)
+- 🖼️ Optimización de imágenes con Next/Image
 - 📦 Code splitting automático
-- 💾 Caché inteligente de datos
-
-### Seguridad
-- 🔒 Validación de formularios
-- 🛡️ Protección de rutas admin
-- ✅ Sanitización de inputs
-
-### UX/UI
-- 🎨 Diseño consistente y moderno
-- ♿ Accesibilidad (semantic HTML)
-- 📱 Touch-friendly en móviles
-- ⌨️ Navegación por teclado
+- 💾 ISR (Incremental Static Regeneration) en home
+- 🔄 Revalidación cada 60 segundos
 
 ## 📸 Capturas de Pantalla
 
 ### Tienda (Frontend)
 
 ![Desktop - Hero](public/ecommerce-desktop-hero.png)
-*Vista principal con productos destacados*
+*Hero con producto destacado*
 
-![Desktop - Vista de Producto](public/ecommerce-desktop-heroS2.png)
-*Detalle de producto individual*
+![Desktop - Catálogo](public/ecommerce-desktop-heroS2.png)
+*Grid de productos alineado*
 
 ![Mobile - Productos](public/ecommerce-mobile-hero2.png)
 *Navegación móvil optimizada*
 
-![iPad - Vista Responsiva](public/ecommerce-ipad-hero.png)
-*Adaptación perfecta para tablets*
+![iPad - Responsive](public/ecommerce-ipad-hero.png)
+*Vista tablet*
 
-### Panel Admin (Backend)
+### Panel Admin
 
-![Admin - Gestión de Pedidos](public/ecommerce-admin-orders.png)
-*Dashboard de administración de pedidos*
+![Admin - Órdenes](public/ecommerce-admin-orders.png)
+*Dashboard de órdenes*
 
 ![Admin - Productos](public/ecommerce-admin-products.png)
-*Gestión completa del catálogo de productos*
+*Gestión de catálogo*
 
 ![Admin - Categorías](public/ecommerce-admin-categories.png)
-*Sistema de categorías con métricas*
+*Sistema de categorías*
 
 ## 🚀 Instalación Local
-
 ```bash
-# Clonar el repositorio
-git clone [tu-repo-url]
+# Clonar repositorio
+git clone https://github.com/zeref0000dragneel-byte/nova-ecommerce.git
+cd nova-ecommerce
 
 # Instalar dependencias
 npm install
 
+# Configurar variables de entorno
+cp .env.example .env.local
+# Editar .env.local con tus credenciales
+
+# Generar Prisma Client
+npx prisma generate
+
 # Ejecutar en desarrollo
 npm run dev
 
-# Abrir en navegador
+# Abrir navegador
 http://localhost:3000
 ```
 
 ## 📂 Estructura del Proyecto
-
 ```
-├── app/
-│   ├── (tienda)/          # Rutas públicas de la tienda
-│   │   ├── page.tsx       # Página principal
-│   │   └── productos/     # Catálogo
-│   ├── admin/             # Panel de administración
-│   │   ├── orders/        # Gestión de pedidos
-│   │   ├── productos/     # CRUD de productos
-│   │   └── categorias/    # Gestión de categorías
-│   └── layout.tsx         # Layout principal
-├── components/            # Componentes reutilizables
-├── public/               # Assets estáticos e imágenes
-└── styles/               # Estilos globales
+├── src/
+│   ├── app/
+│   │   ├── (shop)/          # Rutas públicas
+│   │   │   ├── page.tsx     # Home
+│   │   │   ├── shop/        # Catálogo
+│   │   │   └── checkout/    # Proceso de compra
+│   │   ├── admin/           # Panel de administración
+│   │   │   ├── page.tsx     # Dashboard
+│   │   │   ├── products/    # CRUD productos
+│   │   │   ├── orders/      # Gestión órdenes
+│   │   │   └── categories/  # Categorías
+│   │   └── api/             # API Routes
+│   │       ├── checkout/    # MercadoPago
+│   │       └── webhooks/    # Notificaciones
+│   ├── components/
+│   │   ├── Header.tsx       # Nav con Sheet móvil
+│   │   ├── Hero.tsx         # Hero con imagen
+│   │   ├── ProductCard.tsx  # Card minimalista
+│   │   ├── cart/            # Carrito (Drawer)
+│   │   └── admin/           # Componentes admin
+│   ├── contexts/
+│   │   └── CartContext.tsx  # Estado global carrito
+│   └── lib/
+│       ├── prisma.ts        # Cliente Prisma
+│       └── mercadopago.ts   # Config MercadoPago
+├── prisma/
+│   └── schema.prisma        # Schema de BD
+└── public/                  # Assets estáticos
 ```
 
-## 🔜 Próximas Mejoras
+## 🔜 Roadmap
 
-- [ ] Integración con pasarela de pagos (Stripe/PayPal)
-- [ ] Sistema de autenticación para clientes
-- [ ] Notificaciones por email
-- [ ] Filtros avanzados de productos
-- [ ] Wishlist / Lista de deseos
-- [ ] Sistema de reviews y ratings
-- [ ] Multi-idioma (i18n)
+- [ ] Sistema de reviews con estrellas
+- [ ] Filtros avanzados (precio, categoría, stock)
+- [ ] Wishlist persistente
+- [ ] Cupones de descuento
+- [ ] Multi-idioma (ES/EN)
+- [ ] Panel de analytics avanzado
+- [ ] Notificaciones por email (Resend)
+
+## 🔐 Variables de Entorno
+```env
+# Database (Supabase)
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+
+# MercadoPago
+MERCADOPAGO_ACCESS_TOKEN="TEST-..."
+NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY="TEST-..."
+
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
+
+# Admin Auth
+ADMIN_USERNAME="Admin"
+ADMIN_PASSWORD="..."
+ADMIN_SESSION_SECRET="..."
+
+# App
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+```
 
 ## 📄 Licencia
 
-Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+MIT License - Libre para uso personal y comercial.
 
 ---
 
-**Desarrollado por José Gabriel** | 📧 cuevasgutierrezjosegabriel@gmail.com
-| [LinkedIn](www.linkedin.com/in/josegabriel-dev) | [GitHub](https://github.com/zeref0000dragneel-byte)
+**Desarrollado con 🖤 por José Gabriel**  
+📧 cuevasgutierrezjosegabriel@gmail.com  
+🔗 [LinkedIn](https://www.linkedin.com/in/josegabriel-dev) | [GitHub](https://github.com/zeref0000dragneel-byte)
 
-**Stack:** Next.js · React · TypeScript · Tailwind CSS · Vercel
+**Stack:** Next.js 16 · React 18 · TypeScript · Tailwind CSS · Supabase · Prisma · MercadoPago · Vercel
+
+---
+
+*"Vibe Coding" — Código rápido, estético y funcional. Menos es más.* 🎯
