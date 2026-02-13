@@ -223,7 +223,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                       {colors.map((color) => {
                         const variant = product.variants.find((v) => v.color === color);
                         const isSelected = selectedVariant?.color === color;
-                        const hex = getColorHex(color);
+                        const hex = color ? getColorHex(color) : '#000000';
                         return (
                           <button
                             key={color}
