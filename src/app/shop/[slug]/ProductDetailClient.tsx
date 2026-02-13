@@ -226,10 +226,10 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                         const hex = color ? getColorHex(color) : '#000000';
                         return (
                           <button
-                            key={color}
+                            key={color ?? ''}
                             type="button"
                             onClick={() => variant && handleVariantClick(variant)}
-                            title={color}
+                            title={color || undefined}
                             className={`relative w-5 h-5 rounded-full shrink-0 transition-all ${
                               isSelected
                                 ? 'ring-2 ring-foreground ring-offset-2 ring-offset-background'
@@ -273,7 +273,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                         const isDisabled = !variant || variant.stock === 0;
                         return (
                           <button
-                            key={size}
+                            key={size ?? ''}
                             type="button"
                             onClick={() => variant && handleVariantClick(variant)}
                             disabled={isDisabled}
