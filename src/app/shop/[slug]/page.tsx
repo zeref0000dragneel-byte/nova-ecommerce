@@ -33,16 +33,26 @@ export default async function ProductDetailPage({
   const { slug } = await params;
   const product = await getProduct(slug);
 
-  // ✅ Transformar el producto para que tenga imageUrl en vez de images
+  const imageUrl = product.images && product.images.length > 0 ? product.images[0] : null;
+  const images = product.images || [];
+
+  const rawSpecs = product.specs as { attribute: string; value: string }[] | null;
+  const specs =
+    Array.isArray(rawSpecs) && rawSpecs.length > 0
+      ? rawSpecs.filter((s) => s?.attribute && s?.value)
+      : undefined;
+
   const transformedProduct = {
     id: product.id,
     name: product.name,
     slug: product.slug,
     description: product.description,
     price: product.price,
-    comparePrice: product.compareAtPrice, // ✅ Mapear compareAtPrice → comparePrice
+    comparePrice: product.compareAtPrice,
     stock: product.stock,
-    imageUrl: product.images && product.images.length > 0 ? product.images[0] : null, // ✅ Convertir array → string
+    imageUrl,
+    images,
+    specs,
     category: {
       id: product.category.id,
       name: product.category.name,
@@ -54,7 +64,7 @@ export default async function ProductDetailPage({
       sku: variant.sku,
       price: variant.price,
       stock: variant.stock,
-      imageUrl: variant.imageUrl,
+      images: variant.images || [],
     })),
   };
 

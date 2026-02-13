@@ -10,7 +10,7 @@ import Header from '@/components/Header';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice } = useCart();
+  const { items, getTotal } = useCart();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [location, setLocation] = useState<{
@@ -95,7 +95,7 @@ export default function CheckoutPage() {
             longitude: location?.lng || undefined,
           },
           items: items.map((item) => ({
-            productId: item.id,
+            productId: item.productId,
             variantId: item.variantId || null,
             quantity: item.quantity,
             price: item.price,
@@ -141,18 +141,18 @@ export default function CheckoutPage() {
 
   if (!items || items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center px-8 py-16">
+          <ShoppingCart className="w-16 h-16 text-zinc-300 mx-auto mb-6" />
+          <h2 className="text-xl font-bold text-zinc-900 mb-2 tracking-tight">
             Tu carrito está vacío
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-zinc-500 text-sm mb-8">
             Agrega productos antes de proceder al checkout
           </p>
           <button
             onClick={() => router.push('/shop')}
-            className="bg-cta text-white px-6 py-3 rounded-lg hover:bg-cta/90 transition"
+            className="bg-black text-white px-8 py-5 text-[11px] uppercase tracking-[0.3em] font-medium hover:opacity-90 transition"
           >
             Ir a la Tienda
           </button>
@@ -161,198 +161,156 @@ export default function CheckoutPage() {
     );
   }
 
+  const totalPrice = getTotal();
   const shipping = totalPrice >= 500 ? 0 : 99;
   const finalTotal = totalPrice + shipping;
 
+  const ghostInputClass = (error: string | undefined) =>
+    `w-full border-b bg-transparent px-1 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition-colors focus:border-black ${
+      error ? 'border-red-500' : 'border-zinc-200'
+    }`;
+
+  const ghostTextareaClass =
+    'w-full border-b border-zinc-200 bg-transparent px-1 py-4 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none transition-colors focus:border-black resize-none';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-white">
       <Header />
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Checkout</h1>
-        <p className="text-gray-600 mb-8">Completa tu información para finalizar la compra</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 min-h-[calc(100vh-4rem)]">
+        {/* Formulario - 2/3 */}
+        <div className="lg:col-span-2 bg-white overflow-y-auto">
+          <div className="max-w-xl mx-auto px-8 py-16 lg:py-24">
+            <h1 className="text-2xl font-bold text-zinc-900 mb-1 tracking-tight">Checkout</h1>
+            <p className="text-zinc-500 text-sm mb-12">Completa tu información para finalizar la compra</p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Formulario */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <CreditCard className="w-6 h-6 text-action" />
-                Información de Envío
-              </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <section>
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-900 mb-8">Envío</h2>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre Completo *
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Juan Pérez"
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                      errors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-sm mt-1">{errors.name}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="correo@ejemplo.com"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                        errors.email ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Teléfono *
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="5512345678"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                        errors.phone ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Selector de Ubicación con Google Maps */}
-                <LocationPicker
-                  onLocationSelect={(loc) => {
-                    setLocation(loc);
-                    // Extraer ciudad y estado de la dirección si es posible
-                    if (loc.address) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        address: loc.address,
-                      }));
-                    }
-                  }}
-                  initialAddress={formData.address}
-                />
-                {errors.address && (
-                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-                )}
-
-                {/* Campo de dirección manual (fallback) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dirección Manual (si no usaste el selector)
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder="Calle Example #123, Col. Centro"
-                    className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 transition-all ${
-                      errors.address ? 'border-red-500' : 'border-gray-200'
-                    }`}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Ciudad *
-                    </label>
+                    <label className="block text-sm font-medium text-zinc-600 mb-1">Nombre Completo *</label>
                     <input
                       type="text"
-                      name="city"
-                      value={formData.city}
+                      name="name"
+                      value={formData.name}
                       onChange={handleChange}
-                      placeholder="Ciudad de México"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                        errors.city ? 'border-red-500' : 'border-gray-300'
-                      }`}
+                      placeholder="Juan Pérez"
+                      className={ghostInputClass(errors.name)}
                     />
-                    {errors.city && (
-                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-                    )}
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Estado *
-                    </label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleChange}
-                      placeholder="CDMX"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                        errors.state ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.state && (
-                      <p className="text-red-500 text-sm mt-1">{errors.state}</p>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-600 mb-1">Email *</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="correo@ejemplo.com"
+                        className={ghostInputClass(errors.email)}
+                      />
+                      {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-600 mb-1">Teléfono *</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="5512345678"
+                        className={ghostInputClass(errors.phone)}
+                      />
+                      {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      C.P. *
-                    </label>
-                    <input
-                      type="text"
-                      name="zipCode"
-                      value={formData.zipCode}
-                      onChange={handleChange}
-                      maxLength={5}
-                      placeholder="06000"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400 ${
-                        errors.zipCode ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                    {errors.zipCode && (
-                      <p className="text-red-500 text-sm mt-1">{errors.zipCode}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notas del Pedido (Opcional)
-                  </label>
-                  <textarea
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    rows={3}
-                    placeholder="Instrucciones especiales de entrega..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-action focus:border-transparent text-gray-900 placeholder-gray-400"
+                  <LocationPicker
+                    onLocationSelect={(loc) => {
+                      setLocation(loc);
+                      if (loc.address) {
+                        setFormData((prev) => ({ ...prev, address: loc.address }));
+                      }
+                    }}
+                    initialAddress={formData.address}
                   />
-                </div>
+                  {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
 
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-600 mb-1">Dirección Manual (si no usaste el selector)</label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="Calle Example #123, Col. Centro"
+                      className={ghostInputClass(errors.address)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-600 mb-1">Ciudad *</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        placeholder="Ciudad de México"
+                        className={ghostInputClass(errors.city)}
+                      />
+                      {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-600 mb-1">Estado *</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        placeholder="CDMX"
+                        className={ghostInputClass(errors.state)}
+                      />
+                      {errors.state && <p className="text-red-500 text-xs mt-1">{errors.state}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-600 mb-1">C.P. *</label>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleChange}
+                        maxLength={5}
+                        placeholder="06000"
+                        className={ghostInputClass(errors.zipCode)}
+                      />
+                      {errors.zipCode && <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-600 mb-1">Notas del Pedido (Opcional)</label>
+                    <textarea
+                      name="notes"
+                      value={formData.notes}
+                      onChange={handleChange}
+                      rows={3}
+                      placeholder="Instrucciones especiales de entrega..."
+                      className={ghostTextareaClass}
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-900 mb-8">Pago</h2>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-cta text-white py-4 rounded-lg hover:bg-cta/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  className="w-full bg-black text-white py-5 text-[11px] uppercase tracking-[0.3em] font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -366,42 +324,41 @@ export default function CheckoutPage() {
                     </>
                   )}
                 </button>
-              </form>
-            </div>
+              </section>
+            </form>
           </div>
+        </div>
 
-          {/* Resumen del Pedido */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 sticky top-24 border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <ShoppingCart className="w-6 h-6 text-action" />
-                Resumen del Pedido
-              </h2>
+        {/* Resumen del Pedido - 1/3 sticky */}
+        <div className="lg:col-span-1 bg-zinc-50">
+          <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
+            <div className="p-8 lg:p-12">
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-900 mb-8">Resumen del Pedido</h2>
 
-              <div className="space-y-3 mb-4">
+              <div className="space-y-0">
                 {items.map((item) => (
-                  <div key={`${item.id}-${item.variantId || 'base'}`} className="flex gap-3">
-                    {/* ✅ NUEVO: Imagen */}
-                    {item.imageUrl && (
-                      <div className="relative w-16 h-16 flex-shrink-0">
+                  <div
+                    key={`${item.productId}-${item.variantId || 'base'}`}
+                    className="flex gap-4 py-4 border-b border-[0.5px] border-zinc-100 first:pt-0 last:border-b-0"
+                  >
+                    {item.image && (
+                      <div className="relative w-16 h-16 flex-shrink-0 bg-zinc-100">
                         <Image
-                          src={item.imageUrl}
+                          src={item.image}
                           alt={item.name}
                           fill
-                          className="object-cover rounded"
+                          className="object-cover"
                           sizes="64px"
                         />
                       </div>
                     )}
-                    
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                      {/* ✅ NUEVO: Mostrar variante */}
-                      {item.variantDetails && (
-                        <p className="text-xs text-gray-600">{item.variantDetails}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-zinc-900">{item.name}</p>
+                      {(item.color || item.size) && (
+                        <p className="text-xs text-zinc-500 mt-0.5">{[item.color, item.size].filter(Boolean).join(' · ')}</p>
                       )}
-                      <p className="text-xs text-gray-600">Cantidad: {item.quantity}</p>
-                      <p className="text-sm font-semibold text-primary">
+                      <p className="text-xs text-zinc-500 mt-0.5">Cantidad: {item.quantity}</p>
+                      <p className="text-sm font-semibold text-zinc-900 mt-1">
                         ${(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
@@ -409,31 +366,27 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
-              <div className="border-t pt-4 space-y-2">
+              <div className="pt-6 mt-6 border-t border-[0.5px] border-zinc-100 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">${totalPrice.toFixed(2)}</span>
+                  <span className="text-zinc-500">Subtotal</span>
+                  <span className="font-medium text-zinc-900">${totalPrice.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Envío</span>
-                  <span className="font-medium">
+                  <span className="text-zinc-500">Envío</span>
+                  <span className="font-medium text-zinc-900">
                     {shipping === 0 ? (
-                      <span className="text-green-600 font-semibold">GRATIS</span>
+                      <span className="text-zinc-500">Gratis</span>
                     ) : (
                       `$${shipping.toFixed(2)}`
                     )}
                   </span>
                 </div>
                 {totalPrice < 500 && (
-                  <p className="text-xs text-gray-500">
-                    Envío gratis en compras mayores a $500.00
-                  </p>
+                  <p className="text-xs text-zinc-400">Envío gratis en compras mayores a $500.00</p>
                 )}
-                <div className="border-t pt-2 flex justify-between">
-                  <span className="text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-lg font-bold text-primary">
-                    ${finalTotal.toFixed(2)} MXN
-                  </span>
+                <div className="flex justify-between pt-4 mt-2">
+                  <span className="text-sm font-bold text-zinc-900">Total</span>
+                  <span className="text-sm font-bold text-zinc-900">${finalTotal.toFixed(2)} MXN</span>
                 </div>
               </div>
             </div>

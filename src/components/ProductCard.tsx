@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 import { useState } from "react";
 
 interface ProductCardProps {
@@ -23,124 +24,118 @@ export default function ProductCard({
   imageUrl,
   stock,
 }: ProductCardProps) {
-  const { addItem } = useCart();
-  const [isHovered, setIsHovered] = useState(false);
+  const { addToCart, setIsOpen } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsAdding(true);
-    addItem({ id, name, slug, price, imageUrl, stock });
-    setTimeout(() => setIsAdding(false), 1000);
+    addToCart({
+      productId: id,
+      name,
+      price,
+      image: imageUrl || "",
+      quantity: 1,
+      slug,
+    });
+    toast.success(
+      <div className="flex items-start gap-3">
+        <div className="w-12 h-12 rounded-sm bg-gray-100 flex-shrink-0 overflow-hidden">
+          <Image
+            src={imageUrl || "/placeholder.png"}
+            alt={name}
+            width={48}
+            height={48}
+            className="object-cover w-full h-full"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm text-black">Agregado al carrito</p>
+          <p className="text-xs text-gray-600 truncate mt-0.5">{name}</p>
+        </div>
+      </div>,
+      {
+        duration: 3000,
+        action: {
+          label: "Ver carrito",
+          onClick: () => setIsOpen(true),
+        },
+      }
+    );
+    setTimeout(() => setIsAdding(false), 600);
   };
 
   return (
-    <div
-      className="group relative bg-white rounded-[16px] border border-[#E9ECEF] shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-all duration-500 overflow-hidden"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* ✅ Contenedor de Imagen con position: relative */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#F8F9FA]">
+    <article className="group relative bg-white overflow-hidden transition-colors duration-300">
+      <div className="relative aspect-square overflow-hidden bg-zinc-50">
         <Link href={`/shop/${slug}`} className="block w-full h-full">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={name}
-              fill
-              className={`object-cover transition-transform duration-700 ease-out ${
-                isHovered ? "scale-110" : "scale-100"
-              }`}
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
-              <ShoppingCart className="w-12 h-12" />
-            </div>
-          )}
+          <Image
+            src={imageUrl || "/placeholder.png"}
+            alt={name}
+            fill
+            sizes="(max-width: 768px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q=="
+          />
+          <span className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 pointer-events-none" aria-hidden />
         </Link>
-        
-        {/* Badges de Disponibilidad */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
-          {stock === 0 ? (
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
+
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5 pointer-events-none">
+          {stock === 0 && (
+            <span className="text-[9px] uppercase tracking-widest text-zinc-500 bg-white/95 px-2 py-0.5 border border-zinc-200">
               Agotado
             </span>
-          ) : stock <= 5 && (
-            <span className="bg-yellow-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm">
+          )}
+          {stock > 0 && stock <= 5 && (
+            <span className="text-[9px] uppercase tracking-widest text-zinc-500 bg-white/95 px-2 py-0.5 border border-zinc-200">
               Últimas {stock}
             </span>
           )}
         </div>
-
-        {/* Overlay de Acción Rápida */}
-        <div className={`absolute inset-0 bg-black/5 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovered ? "opacity-100" : "opacity-0"}`}>
-             <Link
-                href={`/shop/${slug}`}
-                className="bg-white text-[#264653] p-3 rounded-full shadow-xl hover:bg-[#264653] hover:text-white transition-colors duration-300 transform translate-y-4 group-hover:translate-y-0 pointer-events-auto"
-              >
-                <Eye className="w-5 h-5" />
-              </Link>
-        </div>
       </div>
 
-      {/* Información del Producto */}
-      <div className="p-5">
-        <div className="mb-1">
-            <Link href={`/shop/${slug}`}>
-              <h2 className="text-lg font-bold text-[#264653] leading-tight line-clamp-2 h-[3rem] group-hover:text-[#2A9D8F] transition-colors">
-                {name}
-              </h2>
-            </Link>
+      <div className="pt-0 flex flex-col">
+        <div className="min-h-[40px] mt-3">
+          <Link href={`/shop/${slug}`}>
+            <h2 className="text-[13px] font-medium text-zinc-900 uppercase tracking-tight line-clamp-2 hover:text-zinc-600 transition-colors duration-300">
+              {name}
+            </h2>
+          </Link>
         </div>
 
-        {/* Precio y Indicador de Stock Realista */}
-        <div className="flex flex-col gap-1 mt-2">
-            <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-extrabold text-[#264653]">
-                    ${price.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-[10px] font-bold text-gray-400">MXN</span>
-            </div>
-            {stock > 0 && (
-                <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-[#2A9D8F] rounded-full animate-pulse"></span>
-                    <span className="text-[11px] text-gray-500 font-medium">{stock} disponibles</span>
-                </div>
+        <div className="flex flex-col gap-0.5 mt-1.5">
+          <span className="text-[12px] text-zinc-500 tabular-nums">
+            $
+            {price.toLocaleString("es-MX", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}{" "}
+            MXN
+          </span>
+        </div>
+
+        <div className="mt-4">
+          <button
+            onClick={handleAddToCart}
+            disabled={stock === 0 || isAdding}
+            className="w-full bg-black text-white py-2.5 rounded-sm text-sm font-medium hover:bg-gray-900 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isAdding ? (
+              <>
+                <Check className="w-4 h-4 animate-in zoom-in-50 duration-300" />
+                <span>Agregado</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" strokeWidth={1.5} />
+                <span>{stock === 0 ? "Agotado" : "Agregar"}</span>
+              </>
             )}
-        </div>
-
-        {/* Botón CTA (Call To Action) - Ancho completo para evitar cortes de texto */}
-        <div className="mt-5">
-            <button
-                onClick={handleAddToCart}
-                disabled={stock === 0 || isAdding}
-                className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-300 ${
-                    isAdding 
-                    ? "bg-[#2A9D8F] text-white" 
-                    : "bg-[#E76F51] text-white hover:bg-[#d66244] active:scale-[0.98] shadow-[0_4px_14px_rgba(231,111,81,0.4)]"
-                } disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed`}
-            >
-                {isAdding ? (
-                    <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Agregando...</span>
-                    </>
-                ) : (
-                    <>
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>{stock === 0 ? "Agotado" : "Agregar al carrito"}</span>
-                    </>
-                )}
-            </button>
+          </button>
         </div>
       </div>
-
-      {/* Efecto de Brillo Sutil al pasar el mouse */}
-      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-      </div>
-    </div>
+    </article>
   );
 }

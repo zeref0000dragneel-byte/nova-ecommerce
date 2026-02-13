@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { requireAuth } from '@/app/lib/auth';
 import { prisma } from '@/app/lib/prisma';
+import SalesChart from './components/SalesChart';
 
 async function getStats() {
   const [productsCount, categoriesCount, ordersCount, customersCount] = await Promise.all([
@@ -26,139 +27,148 @@ async function getStats() {
   };
 }
 
+async function getRecentOrders() {
+  const orders = await prisma.order.findMany({
+    take: 5,
+    orderBy: { createdAt: 'desc' },
+    include: { customer: true },
+  });
+  return orders;
+}
+
+/** Ventas de los últimos 7 días (un punto por día) */
+async function getWeeklySales(): Promise<{ day: string; ventas: number }[]> {
+  const days: { date: Date; label: string; ventas: number }[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const next = new Date(d);
+    next.setDate(next.getDate() + 1);
+    days.push({
+      date: d,
+      label: d.toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', ''),
+      ventas: 0,
+    });
+  }
+
+  const start = days[0].date;
+  const end = new Date(days[days.length - 1].date);
+  end.setHours(23, 59, 59, 999);
+
+  const orders = await prisma.order.findMany({
+    where: { createdAt: { gte: start, lte: end } },
+    select: { total: true, createdAt: true },
+  });
+
+  orders.forEach((o) => {
+    const d = new Date(o.createdAt);
+    d.setHours(0, 0, 0, 0);
+    const idx = days.findIndex((x) => x.date.getTime() === d.getTime());
+    if (idx >= 0) days[idx].ventas += o.total;
+  });
+
+  return days.map(({ label, ventas }) => ({ day: label, ventas }));
+}
+
 export default async function AdminDashboard() {
   // 🔒 Verificar autenticación PRIMERO
   await requireAuth('/admin');
 
-  // Obtener datos solo si está autenticado
-  const stats = await getStats();
+  const [stats, recentOrders, weeklySales] = await Promise.all([
+    getStats(),
+    getRecentOrders(),
+    getWeeklySales(),
+  ]);
+
+  function initials(name: string): string {
+    return name
+      .trim()
+      .split(/\s+/)
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase() || '?';
+  }
 
   return (
     <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h2>
-        <p className="font-medium text-gray-600 mt-2">Resumen general de tu e-commerce</p>
-      </div>
-
-      {/* Stats Grid - Premium cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Products */}
-        <div className="bg-white rounded-lg shadow-lg hover:shadow-2xl border border-gray-200 border-t-4 border-t-blue-500 p-8 transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-600">Productos</p>
-              <p className="text-4xl font-bold tracking-tighter text-gray-900 mt-2">{stats.productsCount}</p>
-            </div>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 shadow-md">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-          </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <p className="text-2xl font-semibold tracking-tighter text-zinc-950">
+            {stats.productsCount}
+          </p>
+          <p className="text-[10px] text-zinc-400 mt-1">Productos</p>
+          <p className="text-[10px] text-zinc-400 mt-0.5">+0% vs mes anterior</p>
         </div>
-
-        {/* Total Categories */}
-        <div className="bg-white rounded-lg shadow-lg hover:shadow-2xl border border-gray-200 border-t-4 border-t-purple-500 p-8 transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-600">Categorías</p>
-              <p className="text-4xl font-bold tracking-tighter text-gray-900 mt-2">{stats.categoriesCount}</p>
-            </div>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-purple-600 shadow-md">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <p className="text-2xl font-semibold tracking-tighter text-zinc-950">
+            {stats.categoriesCount}
+          </p>
+          <p className="text-[10px] text-zinc-400 mt-1">Categorías</p>
+          <p className="text-[10px] text-zinc-400 mt-0.5">+0% vs mes anterior</p>
         </div>
-
-        {/* Total Orders */}
-        <div className="bg-white rounded-lg shadow-lg hover:shadow-2xl border border-gray-200 border-t-4 border-t-green-500 p-8 transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-600">Pedidos</p>
-              <p className="text-4xl font-bold tracking-tighter text-gray-900 mt-2">{stats.ordersCount}</p>
-            </div>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600 shadow-md">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <p className="text-2xl font-semibold tracking-tighter text-zinc-950">
+            {stats.ordersCount}
+          </p>
+          <p className="text-[10px] text-zinc-400 mt-1">Pedidos</p>
+          <p className="text-[10px] text-zinc-400 mt-0.5">+0% vs mes anterior</p>
         </div>
-
-        {/* Total Customers */}
-        <div className="bg-white rounded-lg shadow-lg hover:shadow-2xl border border-gray-200 border-t-4 border-t-orange-500 p-8 transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium text-gray-600">Clientes</p>
-              <p className="text-4xl font-bold tracking-tighter text-gray-900 mt-2">{stats.customersCount}</p>
-            </div>
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-orange-400 to-orange-600 shadow-md">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-          </div>
+        <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <p className="text-2xl font-semibold tracking-tighter text-zinc-950">
+            ${stats.totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-[10px] text-zinc-400 mt-1">Ingresos</p>
+          <p className="text-[10px] text-zinc-400 mt-0.5">+0% vs mes anterior</p>
         </div>
       </div>
 
-      {/* Revenue Card */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-2xl p-8 text-white mb-8 transition-all duration-300 hover:-translate-y-0.5">
-        <h3 className="text-lg font-semibold mb-2">Ingresos Totales</h3>
-        <p className="text-4xl font-bold tracking-tighter">${stats.totalRevenue.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MXN</p>
-        <p className="text-blue-100 mt-2 font-medium">Total acumulado de todas las ventas</p>
-      </div>
+      {/* Ventas de la semana - gráfico minimalista */}
+      <section className="bg-white border border-zinc-100 rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
+        <h3 className="px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wider border-b border-zinc-100">
+          Ventas de la semana
+        </h3>
+        <SalesChart data={weeklySales} />
+      </section>
 
-      {/* Quick Actions - Premium */}
-      <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
-        <h3 className="text-2xl font-bold tracking-tight text-gray-900 mb-6">Acciones Rápidas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <a
-            href="/admin/products/new"
-            className="flex items-center gap-4 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-600 group-hover:scale-105 transition-transform duration-200">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Nuevo Producto</p>
-              <p className="text-sm font-medium text-gray-600">Agregar al catálogo</p>
-            </div>
-          </a>
+      {/* Actividad Reciente - lista ultra-limpia */}
+      <section className="bg-white border border-zinc-100 rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
+        <h3 className="px-4 py-3 text-[11px] font-medium text-zinc-500 uppercase tracking-wider border-b border-zinc-100">
+          Actividad reciente
+        </h3>
+        <ul className="divide-y divide-zinc-50">
+          {recentOrders.length === 0 ? (
+            <li className="px-4 py-4 text-[12px] text-zinc-400">Sin ventas recientes</li>
+          ) : (
+            recentOrders.map((order) => (
+              <li key={order.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-50/50 transition-colors">
+                <div className="w-7 h-7 rounded-full bg-zinc-100 flex items-center justify-center shrink-0 text-[10px] font-medium text-zinc-600">
+                  {initials(order.customer.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-medium text-zinc-950 truncate">{order.customer.name}</p>
+                  <p className="text-[12px] text-zinc-500 truncate">{order.orderNumber} · ${order.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <span className="text-[12px] text-zinc-400 shrink-0">
+                  {new Date(order.createdAt).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
+                </span>
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
 
-          <a
-            href="/admin/products"
-            className="flex items-center gap-4 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-400 to-purple-600 group-hover:scale-105 transition-transform duration-200">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Ver Productos</p>
-              <p className="text-sm font-medium text-gray-600">Gestionar catálogo</p>
-            </div>
-          </a>
-
-          <a
-            href="/admin/orders"
-            className="flex items-center gap-4 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all duration-300 group hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-green-400 to-green-600 group-hover:scale-105 transition-transform duration-200">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Ver Pedidos</p>
-              <p className="text-sm font-medium text-gray-600">Gestionar ventas</p>
-            </div>
-          </a>
-        </div>
+      <div className="flex gap-4">
+        <a href="/admin/products/new" className="text-[12px] font-medium text-zinc-500 hover:text-zinc-950">
+          + Nuevo producto
+        </a>
+        <a href="/admin/products" className="text-[12px] font-medium text-zinc-500 hover:text-zinc-950">
+          Productos
+        </a>
+        <a href="/admin/orders" className="text-[12px] font-medium text-zinc-500 hover:text-zinc-950">
+          Pedidos
+        </a>
       </div>
     </div>
   );

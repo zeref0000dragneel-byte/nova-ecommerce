@@ -35,6 +35,7 @@ model Product {
   price          Float
   compareAtPrice Float?   // ⚠️ Cambiado de "comparePrice"
   images         String[] // ⚠️ Cambiado de "imageUrl" (ahora es array)
+  specs          Json?    // Especificaciones: [{ attribute, value }]
   stock          Int      @default(0)
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
@@ -63,7 +64,7 @@ model ProductVariant {
   sku        String?  @unique
   price      Float?
   stock      Int      @default(0)
-  imageUrl   String?
+  images     String[]  @default([])
   isActive   Boolean  @default(true)
   
   orderItems OrderItem[]

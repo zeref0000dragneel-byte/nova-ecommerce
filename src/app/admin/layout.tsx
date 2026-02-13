@@ -1,6 +1,7 @@
 import { isAuthenticated, clearAdminSession } from '@/app/lib/auth';
 import { redirect } from 'next/navigation';
 import AdminShell from './AdminShell';
+import AdminToaster from './AdminToaster';
 
 async function handleLogout() {
   'use server';
@@ -16,8 +17,11 @@ export default async function AdminLayout({
   const authenticated = await isAuthenticated();
 
   return (
-    <AdminShell authenticated={!!authenticated} logoutAction={handleLogout}>
-      {children}
-    </AdminShell>
+    <>
+      <AdminShell authenticated={!!authenticated} logoutAction={handleLogout}>
+        {children}
+      </AdminShell>
+      {authenticated && <AdminToaster />}
+    </>
   );
 }

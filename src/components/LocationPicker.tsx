@@ -260,7 +260,7 @@ export default function LocationPicker({
               type="button"
               onClick={handleUseCurrentLocation}
               disabled={isLoading}
-              className="px-4 py-3 bg-action text-white rounded-xl hover:bg-action/90 transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-3 rounded-sm bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               title="Usar mi ubicación actual"
             >
             {isLoading ? (

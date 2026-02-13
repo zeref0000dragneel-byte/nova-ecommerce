@@ -31,7 +31,7 @@ export default function CategoryFilter({
     <select
       value={currentCategory || ""}
       onChange={handleChange}
-      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="px-4 py-2.5 border border-border rounded-sm bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
     >
       <option value="">Todas las categorías</option>
       {categories.map((category) => (

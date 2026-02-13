@@ -44,26 +44,31 @@ export async function PUT(
       price,
       comparePrice,
       stock,
-      imageUrl,
+      images,
+      specs,
       categoryId,
       isActive,
     } = body;
 
+    const updateData: Record<string, unknown> = {};
+    if (name) updateData.name = name;
+    if (slug) updateData.slug = slug;
+    if (description !== undefined) updateData.description = description;
+    if (price) updateData.price = parseFloat(price);
+    if (comparePrice !== undefined) updateData.compareAtPrice = comparePrice ? parseFloat(comparePrice) : null;
+    if (stock !== undefined) updateData.stock = parseInt(stock);
+    if (categoryId) updateData.categoryId = categoryId;
+    if (isActive !== undefined) updateData.isActive = isActive;
+    if (images !== undefined) {
+      updateData.images = Array.isArray(images) ? images.filter((u: string) => typeof u === 'string') : [];
+    }
+    if (specs !== undefined) {
+      updateData.specs = Array.isArray(specs) && specs.length > 0 ? specs : null;
+    }
+
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        ...(name && { name }),
-        ...(slug && { slug }),
-        ...(description !== undefined && { description }),
-        ...(price && { price: parseFloat(price) }),
-        ...(comparePrice !== undefined && { 
-          comparePrice: comparePrice ? parseFloat(comparePrice) : null 
-        }),
-        ...(stock !== undefined && { stock: parseInt(stock) }),
-        ...(imageUrl !== undefined && { imageUrl }),
-        ...(categoryId && { categoryId }),
-        ...(isActive !== undefined && { isActive }),
-      },
+      data: updateData,
       include: {
         category: true,
       },

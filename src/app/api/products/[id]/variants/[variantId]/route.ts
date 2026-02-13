@@ -10,19 +10,23 @@ export async function PUT(
     const { variantId } = await params;
     const body = await request.json();
 
-    const { color, size, sku, price, stock, imageUrl, isActive } = body;
+    const { color, size, sku, price, stock, images, isActive } = body;
 
-    const variant = await prisma.productVariant.update({
-      where: { id: variantId },
-      data: {
+    const updateData: Record<string, unknown> = {
         color: color || null,
         size: size || null,
         sku: sku || null,
         price: price ? parseFloat(price) : null,
         stock: stock ? parseInt(stock) : 0,
-        imageUrl: imageUrl || null,
         isActive: isActive !== undefined ? isActive : true,
-      },
+    };
+    if (images !== undefined) {
+      updateData.images = Array.isArray(images) ? images.filter((u: string) => typeof u === 'string') : [];
+    }
+
+    const variant = await prisma.productVariant.update({
+      where: { id: variantId },
+      data: updateData,
     });
 
     return NextResponse.json(variant);

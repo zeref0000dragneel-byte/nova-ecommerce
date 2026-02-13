@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { preferenceClient, MP_CONFIG } from '@/app/lib/mercadopago';
 import { prisma } from '@/app/lib/prisma';
+
+const MERCADOPAGO_API = 'https://api.mercadopago.com/checkout/preferences';
+const ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN!;
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 /**
  * Este endpoint crea una preferencia de pago SIN crear la orden todavía
@@ -86,57 +89,60 @@ export async function POST(request: NextRequest) {
       return {
         id: item.productId,
         title: product?.name || 'Producto',
-        quantity: item.quantity,
-        unit_price: item.price,
+        quantity: Number(item.quantity),
+        unit_price: Number(item.price),
         currency_id: 'MXN',
       };
     });
+    
+    
 
     console.log('🛒 Items para MercadoPago:', JSON.stringify(mpItems, null, 2));
-    console.log('🔗 MP_CONFIG:', {
-      publicKey: MP_CONFIG.publicKey?.substring(0, 20) + '...',
-      backUrls: MP_CONFIG.backUrls,
-      notificationUrl: MP_CONFIG.notificationUrl
-    });
 
     // Crear preferencia de pago
     console.log('🚀 Llamando a MercadoPago API...');
-    
-    const preferenceBody = {
+
+    const preferenceData = {
       items: mpItems,
       payer: {
         name: customer.name,
         email: customer.email,
-        phone: {
-          number: customer.phone || '',
-        },
-        address: {
-          street_name: customer.address || '',
-          zip_code: customer.zipCode || '',
-        },
       },
       back_urls: {
-        success: `${MP_CONFIG.backUrls.success}`,
-        failure: `${MP_CONFIG.backUrls.failure}`,
-        pending: `${MP_CONFIG.backUrls.pending}`,
+        success: `${BASE_URL}/checkout/success`,
+        failure: `${BASE_URL}/checkout/failure`,
+        pending: `${BASE_URL}/checkout/pending`,
       },
-      auto_return: 'approved' as const,
-      notification_url: MP_CONFIG.notificationUrl,
+      notification_url: `${BASE_URL}/api/webhooks/mercadopago`,
       external_reference: JSON.stringify({
         customer,
         items,
-        total,
+        total: mpItems.reduce((acc, item) => acc + (item.unit_price * item.quantity), 0),
         shippingAddress,
         timestamp: Date.now(),
       }),
-      statement_descriptor: 'MI E-COMMERCE',
+      statement_descriptor: 'NOVA',
     };
 
-    console.log('📋 Preference body:', JSON.stringify(preferenceBody, null, 2));
+    console.log('📋 Preference data:', JSON.stringify(preferenceData, null, 2));
 
-    const preference = await preferenceClient.create({
-      body: preferenceBody,
+    // Llamar a la API REST directamente
+    const mpResponse = await fetch(MERCADOPAGO_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify(preferenceData),
     });
+
+    if (!mpResponse.ok) {
+      const errorData = await mpResponse.json();
+      console.error('❌ MercadoPago API Error:', errorData);
+      throw new Error(errorData.message || 'Error al crear preferencia');
+    }
+
+    const preference = await mpResponse.json();
 
     console.log('✅ ¡Preferencia creada exitosamente!');
     console.log('🆔 Preference ID:', preference.id);

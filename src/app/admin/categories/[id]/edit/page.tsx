@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import { ArrowLeft, Save, X, FolderTree } from "lucide-react";
 
 export default function EditCategoryPage({
@@ -36,7 +37,7 @@ export default function EditCategoryPage({
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al cargar la categoría");
+      toast.error("Error al cargar la categoría");
     } finally {
       setIsLoading(false);
     }
@@ -56,15 +57,16 @@ export default function EditCategoryPage({
       });
 
       if (response.ok) {
-        router.push("/admin/categories");
+        toast.success("Categoría actualizada");
+        router.push("/admin/categories?toast=updated");
         router.refresh();
       } else {
         const error = await response.json();
-        alert(error.message || "Error al actualizar la categoría");
+        toast.error(error.message || "Error al actualizar la categoría");
       }
     } catch (error) {
       console.error("Error:", error);
-      alert("Error al actualizar la categoría");
+      toast.error("Error al actualizar la categoría");
     } finally {
       setIsSubmitting(false);
     }
@@ -73,7 +75,7 @@ export default function EditCategoryPage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Cargando...</div>
+        <div className="text-zinc-500">Cargando...</div>
       </div>
     );
   }
@@ -84,34 +86,34 @@ export default function EditCategoryPage({
       <div className="mb-8">
         <Link
           href="/admin/categories"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+          className="inline-flex items-center text-zinc-600 hover:text-zinc-900 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Volver a categorías
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Editar Categoría</h1>
-        <p className="text-gray-600 mt-1">Actualiza la información de la categoría</p>
+        <h1 className="text-3xl font-bold text-zinc-900">Editar Categoría</h1>
+        <p className="text-zinc-600 mt-1">Actualiza la información de la categoría</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Preview */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-md p-6 sticky top-8">
-            <h3 className="font-semibold text-gray-900 mb-4">Vista Actual</h3>
+          <div className="bg-white border border-zinc-200 rounded-sm p-6 sticky top-8">
+            <h3 className="font-semibold text-zinc-900 mb-4">Vista Actual</h3>
             <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg flex items-center space-x-3">
-                <FolderTree className="w-8 h-8 text-blue-600" />
+              <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-sm flex items-center space-x-3">
+                <FolderTree className="w-8 h-8 text-zinc-600" />
                 <div>
-                  <p className="font-semibold text-gray-900">{name}</p>
-                  <p className="text-sm text-gray-600 font-mono">{slug}</p>
+                  <p className="font-semibold text-zinc-900">{name}</p>
+                  <p className="text-sm text-zinc-600 font-mono">{slug}</p>
                 </div>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-zinc-600">
                 <p>
                   <span className="font-semibold">Productos:</span> {productsCount}
                 </p>
-                <p className="mt-2 text-xs text-gray-500">
-                  💡 El slug no se puede modificar para mantener la integridad de
+                <p className="mt-2 text-xs text-zinc-500">
+                  El slug no se puede modificar para mantener la integridad de
                   las URLs
                 </p>
               </div>
@@ -121,13 +123,13 @@ export default function EditCategoryPage({
 
         {/* Form */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-md p-8">
+          <div className="bg-white border border-zinc-200 rounded-sm p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Nombre */}
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-zinc-700 mb-2"
                 >
                   Nombre de la categoría *
                 </label>
@@ -138,7 +140,7 @@ export default function EditCategoryPage({
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder="Ejemplo: Electrónica, Ropa, Hogar..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
                 />
               </div>
 
@@ -146,7 +148,7 @@ export default function EditCategoryPage({
               <div>
                 <label
                   htmlFor="slug"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
+                  className="block text-sm font-semibold text-zinc-700 mb-2"
                 >
                   Slug (URL)
                 </label>
@@ -155,26 +157,26 @@ export default function EditCategoryPage({
                   id="slug"
                   value={slug}
                   disabled
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 font-mono text-sm cursor-not-allowed"
+                  className="w-full px-4 py-3 border border-zinc-200 rounded-sm bg-zinc-100 text-zinc-600 font-mono text-sm cursor-not-allowed"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-zinc-500 mt-1">
                   El slug no se puede modificar una vez creado
                 </p>
               </div>
 
               {/* Botones */}
-              <div className="flex items-center space-x-4 pt-6 border-t">
+              <div className="flex items-center space-x-4 pt-6 border-t border-zinc-200">
                 <button
                   type="submit"
                   disabled={isSubmitting || !name}
-                  className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="flex-1 bg-black text-white py-3 px-6 rounded-sm hover:bg-zinc-800 transition-colors disabled:bg-zinc-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   <Save className="w-5 h-5" />
                   <span>{isSubmitting ? "Guardando..." : "Guardar Cambios"}</span>
                 </button>
                 <Link
                   href="/admin/categories"
-                  className="flex-1 bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition flex items-center justify-center space-x-2"
+                  className="flex-1 border border-zinc-200 bg-transparent text-zinc-700 py-3 px-6 rounded-sm hover:bg-zinc-50 transition-colors flex items-center justify-center space-x-2"
                 >
                   <X className="w-5 h-5" />
                   <span>Cancelar</span>

@@ -43,13 +43,14 @@ export async function POST(request: Request) {
       slug,
       description,
       price,
-      comparePrice, // ⚠️ Viene del frontend como "comparePrice"
+      comparePrice,
       stock,
       imageUrl,
+      images,
+      specs,
       categoryId,
     } = body;
 
-    // Validaciones básicas
     if (!name || !slug || !price || !categoryId) {
       return NextResponse.json(
         { success: false, error: 'Faltan campos requeridos' },
@@ -57,14 +58,19 @@ export async function POST(request: Request) {
       );
     }
 
+    const imageList = Array.isArray(images) && images.length > 0
+      ? images.filter((u: string) => typeof u === 'string')
+      : imageUrl ? [imageUrl] : [];
+
     const product = await prisma.product.create({
       data: {
         name,
         slug,
         description,
         price: parseFloat(price),
-        compareAtPrice: comparePrice ? parseFloat(comparePrice) : null, // ✅ CORRECTO
-        images: imageUrl ? [imageUrl] : [], // ✅ CORRECTO (array)
+        compareAtPrice: comparePrice ? parseFloat(comparePrice) : null,
+        images: imageList,
+        specs: Array.isArray(specs) && specs.length > 0 ? specs : undefined,
         stock: parseInt(stock) || 0,
         categoryId,
       },

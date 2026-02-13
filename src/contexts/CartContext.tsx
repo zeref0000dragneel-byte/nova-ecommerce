@@ -1,151 +1,141 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export interface CartItem {
-  id: string;
+  productId: string;
+  variantId?: string | null;
   name: string;
-  slug: string;
   price: number;
+  image: string;
   quantity: number;
-  imageUrl: string | null;
-  stock: number;
-  variantId?: string; // ✅ NUEVO: ID de la variante (opcional)
-  variantDetails?: string; // ✅ NUEVO: Texto descriptivo "Rojo - M"
+  color?: string;
+  size?: string;
+  slug?: string; // Para enlaces a /shop/[slug]
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, "quantity">, quantity?: number) => void;
-  removeItem: (productId: string, variantId?: string) => void;
-  updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (productId: string, variantId?: string | null) => void;
+  updateQuantity: (productId: string, quantity: number, variantId?: string | null) => void;
   clearCart: () => void;
-  totalItems: number;
-  totalPrice: number;
+  getTotal: () => number;
+  getItemCount: () => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const STORAGE_KEY = "nova-cart";
+
+function getItemKey(productId: string, variantId?: string | null): string {
+  return variantId ? `${productId}-${variantId}` : productId;
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Cargar carrito desde localStorage al montar (solo en cliente)
+  // Cargar desde localStorage al montar
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
+    if (typeof window === "undefined") return;
+
     try {
-      const savedCart = localStorage.getItem("cart");
-      if (savedCart) {
-        const parsed = JSON.parse(savedCart);
-        // Validar que los datos sean válidos
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           setItems(parsed);
         }
       }
     } catch (error) {
       console.error("Error loading cart:", error);
-      localStorage.removeItem("cart");
+      localStorage.removeItem(STORAGE_KEY);
     } finally {
       setIsLoaded(true);
     }
   }, []);
 
-  // Guardar carrito en localStorage cada vez que cambie
+  // Guardar en localStorage cuando cambie items
   useEffect(() => {
-    if (!isLoaded || typeof window === 'undefined') return;
-    
+    if (!isLoaded || typeof window === "undefined") return;
+
     try {
-      localStorage.setItem("cart", JSON.stringify(items));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (error) {
       console.error("Error saving cart:", error);
     }
   }, [items, isLoaded]);
 
-  const addItem = (product: Omit<CartItem, "quantity">, quantity = 1) => {
-    setItems((currentItems) => {
-      // ✅ Buscar por ID de producto Y variante (si existe)
-      const itemKey = product.variantId 
-        ? `${product.id}-${product.variantId}` 
-        : product.id;
-      
-      const existingItem = currentItems.find((item) => {
-        const existingKey = item.variantId 
-          ? `${item.id}-${item.variantId}` 
-          : item.id;
-        return existingKey === itemKey;
-      });
+  const addToCart = (item: CartItem) => {
+    setItems((current) => {
+      const key = getItemKey(item.productId, item.variantId);
+      const existing = current.find(
+        (i) => getItemKey(i.productId, i.variantId) === key
+      );
 
-      if (existingItem) {
-        // Si ya existe, actualizar cantidad (sin exceder stock)
-        return currentItems.map((item) => {
-          const existingKey = item.variantId 
-            ? `${item.id}-${item.variantId}` 
-            : item.id;
-          
-          return existingKey === itemKey
-            ? {
-                ...item,
-                quantity: Math.min(item.quantity + quantity, product.stock),
-              }
-            : item;
-        });
+      if (existing) {
+        return current.map((i) =>
+          getItemKey(i.productId, i.variantId) === key
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
+        );
       }
 
-      // Si no existe, agregar nuevo item
-      return [...currentItems, { ...product, quantity: Math.min(quantity, product.stock) }];
+      return [...current, { ...item }];
     });
   };
 
-  const removeItem = (productId: string, variantId?: string) => {
-    setItems((currentItems) =>
-      currentItems.filter((item) => {
-        // ✅ Si se especifica variantId, solo eliminar esa variante
-        if (variantId !== undefined) {
-          return !(item.id === productId && item.variantId === variantId);
-        }
-        // ✅ Si NO se especifica variantId, solo eliminar el producto sin variante
-        return !(item.id === productId && item.variantId === undefined);
-      })
+  const removeFromCart = (productId: string, variantId?: string | null) => {
+    setItems((current) =>
+      current.filter(
+        (i) => getItemKey(i.productId, i.variantId) !== getItemKey(productId, variantId)
+      )
     );
   };
 
-  const updateQuantity = (productId: string, quantity: number, variantId?: string) => {
+  const updateQuantity = (
+    productId: string,
+    quantity: number,
+    variantId?: string | null
+  ) => {
     if (quantity <= 0) {
-      removeItem(productId, variantId);
+      removeFromCart(productId, variantId);
       return;
     }
 
-    setItems((currentItems) =>
-      currentItems.map((item) => {
-        const matches = variantId
-          ? item.id === productId && item.variantId === variantId
-          : item.id === productId && !item.variantId;
-
-        return matches
-          ? { ...item, quantity: Math.min(quantity, item.stock) }
-          : item;
-      })
+    setItems((current) =>
+      current.map((i) =>
+        getItemKey(i.productId, i.variantId) === getItemKey(productId, variantId)
+          ? { ...i, quantity }
+          : i
+      )
     );
   };
 
-  const clearCart = () => {
-    setItems([]);
-  };
+  const clearCart = () => setItems([]);
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const getTotal = () =>
+    items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  const getItemCount = () =>
+    items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
-        addItem,
-        removeItem,
+        isOpen,
+        setIsOpen,
+        addToCart,
+        removeFromCart,
         updateQuantity,
         clearCart,
-        totalItems,
-        totalPrice,
+        getTotal,
+        getItemCount,
       }}
     >
       {children}

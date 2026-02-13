@@ -2,13 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Upload, Loader2, Plus, Trash2 } from 'lucide-react';
+
+interface SpecItem {
+  attribute: string;
+  value: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 export default function NewProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -16,16 +27,16 @@ export default function NewProductPage() {
     price: '',
     comparePrice: '',
     stock: '',
-    imageUrl: '',
     categoryId: '',
   });
+  const [images, setImages] = useState<string[]>([]);
+  const [specs, setSpecs] = useState<SpecItem[]>([]);
 
-  // Cargar categorías
   useEffect(() => {
     fetch('/api/categories')
       .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((error) => console.error('Error al cargar categorías:', error));
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err));
   }, []);
 
   const handleInputChange = (
@@ -33,328 +44,307 @@ export default function NewProductPage() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Auto-generar slug desde el nombre
     if (name === 'name') {
       const slug = value
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+        .replace(/^-+|-+$/g, '');
       setFormData((prev) => ({ ...prev, slug }));
     }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validar tipo de archivo
-    if (!file.type.startsWith('image/')) {
-      alert('Por favor selecciona una imagen válida');
-      return;
-    }
-
-    // Validar tamaño (máximo 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('La imagen no debe superar 5MB');
-      return;
-    }
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     setUploadingImage(true);
-
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (!file.type.startsWith('image/')) continue;
+        if (file.size > 5 * 1024 * 1024) continue;
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al subir la imagen');
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Error al subir');
+        const data = await res.json();
+        newUrls.push(data.url);
       }
-
-      const data = await response.json();
-      setFormData((prev) => ({ ...prev, imageUrl: data.url }));
-      alert('✅ Imagen subida correctamente');
-    } catch (error) {
-      console.error('Error:', error);
-      alert('❌ Error al subir la imagen. Intenta de nuevo.');
+      setImages((prev) => [...prev, ...newUrls]);
+      if (newUrls.length > 0) {
+        toast.success(`${newUrls.length} imagen(es) subida(s)`);
+      }
+    } catch {
+      toast.error('Error al subir imagen(es)');
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const addSpec = () => {
+    setSpecs((prev) => [...prev, { attribute: '', value: '' }]);
+  };
+
+  const updateSpec = (index: number, field: 'attribute' | 'value', value: string) => {
+    setSpecs((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+    );
+  };
+
+  const removeSpec = (index: number) => {
+    setSpecs((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-  
     try {
-      const response = await fetch('/api/products', {
+      const validSpecs = specs.filter((s) => s.attribute.trim() && s.value.trim());
+      const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           price: parseFloat(formData.price),
-          comparePrice: formData.comparePrice
-            ? parseFloat(formData.comparePrice)
-            : null,
+          comparePrice: formData.comparePrice ? parseFloat(formData.comparePrice) : null,
           stock: parseInt(formData.stock),
+          images: images.length > 0 ? images : undefined,
+          imageUrl: images[0] || undefined,
+          specs: validSpecs.length > 0 ? validSpecs : undefined,
         }),
       });
-  
-      if (!response.ok) {
-        throw new Error('Error al crear el producto');
-      }
-  
-      const result = await response.json();
-      
-      // ✅ CORRECCIÓN: Verificar estructura del response
-      if (!result.success || !result.data || !result.data.id) {
-        throw new Error('Respuesta inválida del servidor');
-      }
-  
-      // ✅ Redirigir a edición con el ID correcto
-      alert('✅ Producto creado. Ahora puedes agregar variantes (colores, tallas, etc.)');
+      if (!res.ok) throw new Error('Error al crear');
+      const result = await res.json();
+      if (!result.success || !result.data?.id) throw new Error('Respuesta inválida');
+      toast.success('Producto creado');
       router.push(`/admin/products/${result.data.id}/edit`);
-    } catch (error) {
-      console.error('Error:', error);
-      alert('❌ Error al crear el producto');
+    } catch {
+      toast.error('Error al crear el producto');
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Nuevo Producto</h1>
-        <p className="text-gray-600 mt-2">
-          Completa el formulario para agregar un nuevo producto
-        </p>
-      </div>
+    <div className="max-w-2xl">
+      <h2 className="text-[13px] font-medium text-zinc-950 mb-6">Nuevo producto</h2>
 
-      {/* ✅ NUEVO: Aviso sobre variantes */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-2xl">
-        <div className="flex gap-3">
-          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="text-sm text-blue-900">
-            <p className="font-semibold mb-1">💡 ¿Tienes variantes?</p>
-            <p className="text-blue-800">
-              Después de crear el producto podrás agregar <strong>colores, tallas y otras variantes</strong> con precios y stock independientes.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 max-w-2xl">
-        {/* Nombre */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-2">
-            Nombre del Producto *
-          </label>
-          <input
-            type="text"
-            name="name"
-            required
-            value={formData.name}
-            onChange={handleInputChange}
-            className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400"
-            placeholder="Ej: Vestido de Seda"
-          />
-        </div>
-
-        {/* Slug */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-2">
-            Slug (URL amigable) *
-          </label>
-          <input
-            type="text"
-            name="slug"
-            required
-            value={formData.slug}
-            onChange={handleInputChange}
-            className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 bg-gray-50"
-            placeholder="Se genera automáticamente"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            URL: /shop/{formData.slug || 'slug-del-producto'}
-          </p>
-        </div>
-
-        {/* Descripción */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-2">
-            Descripción
-          </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows={4}
-            className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400"
-            placeholder="Descripción detallada del producto..."
-          />
-        </div>
-
-        {/* Categoría */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-2">
-            Categoría *
-          </label>
-          <select
-            name="categoryId"
-            required
-            value={formData.categoryId}
-            onChange={handleInputChange}
-            className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900"
-          >
-            <option value="">Selecciona una categoría</option>
-            {categories.map((cat: any) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Precio y Precio Comparativo */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
           <div>
-            <label className="block font-medium text-gray-700 mb-2">
-              Precio Base *
-            </label>
+            <label className="block text-[12px] font-medium text-zinc-500 mb-1">Nombre *</label>
             <input
-              type="number"
-              name="price"
+              type="text"
+              name="name"
               required
-              step="0.01"
-              min="0"
-              value={formData.price}
+              value={formData.name}
               onChange={handleInputChange}
-              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400"
-              placeholder="0.00"
+              className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 text-zinc-900 bg-white"
+              placeholder="Ej: Vestido de Seda"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Puedes ajustar por variante después
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-medium text-zinc-500 mb-1">Slug *</label>
+            <input
+              type="text"
+              name="slug"
+              required
+              value={formData.slug}
+              onChange={handleInputChange}
+              className="w-full border border-zinc-200 rounded px-3 py-2 text-[12px] bg-zinc-50 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+              placeholder="Se genera automáticamente"
+            />
+            <p className="text-xs text-zinc-500 mt-1">
+              URL: /shop/{formData.slug || 'slug-del-producto'}
             </p>
           </div>
+
           <div>
-            <label className="block font-medium text-gray-700 mb-2">
-              Precio Comparativo
-            </label>
-            <input
-              type="number"
-              name="comparePrice"
-              step="0.01"
-              min="0"
-              value={formData.comparePrice}
+            <label className="block font-medium text-zinc-900 mb-2">Descripción</label>
+            <textarea
+              name="description"
+              value={formData.description}
               onChange={handleInputChange}
-              className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400"
-              placeholder="0.00"
+              rows={4}
+              className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 text-zinc-900 bg-white"
+              placeholder="Descripción detallada del producto..."
             />
           </div>
-        </div>
 
-        {/* Stock */}
-        <div className="mb-4">
-          <label className="block font-medium text-gray-700 mb-2">
-            Stock Base *
-          </label>
-          <input
-            type="number"
-            name="stock"
-            required
-            min="0"
-            value={formData.stock}
-            onChange={handleInputChange}
-            className="w-full border-2 border-gray-300 focus:border-blue-500 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400"
-            placeholder="0"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            El stock de variantes es independiente
-          </p>
-        </div>
+          <div>
+            <label className="block font-medium text-zinc-900 mb-2">Categoría *</label>
+            <select
+              name="categoryId"
+              required
+              value={formData.categoryId}
+              onChange={handleInputChange}
+              className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 bg-white text-zinc-900"
+            >
+              <option value="">Selecciona una categoría</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
 
-        {/* Imagen */}
-        <div className="mb-6">
-          <label className="block font-medium text-gray-700 mb-2">
-            Imagen Principal del Producto
-          </label>
-          
-          {/* Botón de Subir */}
-          <div className="flex items-center gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block font-medium text-zinc-900 mb-2">Precio Base *</label>
+              <input
+                type="number"
+                name="price"
+                required
+                step="0.01"
+                min={0}
+                value={formData.price}
+                onChange={handleInputChange}
+                className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 text-zinc-900 bg-white"
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-zinc-900 mb-2">Precio Comparativo</label>
+              <input
+                type="number"
+                name="comparePrice"
+                step="0.01"
+                min={0}
+                value={formData.comparePrice}
+                onChange={handleInputChange}
+                className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 text-zinc-900 bg-white"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-zinc-900 mb-2">Stock Base *</label>
+            <input
+              type="number"
+              name="stock"
+              required
+              min={0}
+              value={formData.stock}
+              onChange={handleInputChange}
+              className="w-full border border-zinc-200 focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 rounded-sm px-4 py-2 text-zinc-900 bg-white"
+              placeholder="0"
+            />
+          </div>
+
+          {/* Imágenes múltiples */}
+          <div>
+            <label className="block font-medium text-zinc-900 mb-2">Imágenes del Producto</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {images.map((url, i) => (
+                <div key={i} className="relative group">
+                  <img
+                    src={url}
+                    alt={`Preview ${i + 1}`}
+                    className="w-24 h-24 object-cover rounded-sm border border-zinc-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
             <label
               htmlFor="imageUpload"
-              className={`cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 ${
-                uploadingImage ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 border border-zinc-200 rounded-sm cursor-pointer hover:bg-zinc-50 transition-colors ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {uploadingImage ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Subiendo...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-5 h-5" />
-                  Subir Imagen
-                </>
-              )}
+              {uploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+              {uploadingImage ? 'Subiendo...' : 'Subir imagen(es) a Cloudinary'}
             </label>
             <input
               id="imageUpload"
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageUpload}
               disabled={uploadingImage}
               className="hidden"
             />
-            
-            {formData.imageUrl && (
-              <span className="text-sm text-green-600 font-medium">✓ Imagen cargada</span>
-            )}
+            <p className="text-xs text-zinc-500 mt-2">
+              JPG, PNG, WebP. Máx. 5MB. Puedes subir varias imágenes.
+            </p>
           </div>
 
-          {/* Vista previa */}
-          {formData.imageUrl && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">Vista previa:</p>
-              <img
-                src={formData.imageUrl}
-                alt="Vista previa"
-                className="w-40 h-40 object-cover rounded-lg border-2 border-gray-200"
-              />
+          {/* Especificaciones */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="font-medium text-zinc-900">Especificaciones</label>
+              <button
+                type="button"
+                onClick={addSpec}
+                className="flex items-center gap-1 text-sm text-zinc-700 hover:text-zinc-900 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Agregar
+              </button>
             </div>
-          )}
+            <div className="space-y-2">
+              {specs.map((spec, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="Key (ej: Material)"
+                    value={spec.attribute}
+                    onChange={(e) => updateSpec(i, 'attribute', e.target.value)}
+                    className="flex-1 border border-zinc-200 rounded-sm px-3 py-2 text-sm text-zinc-900 bg-white focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Value (ej: Aluminio)"
+                    value={spec.value}
+                    onChange={(e) => updateSpec(i, 'value', e.target.value)}
+                    className="flex-1 border border-zinc-200 rounded-sm px-3 py-2 text-sm text-zinc-900 bg-white focus:border-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSpec(i)}
+                    className="p-2 text-zinc-500 hover:text-zinc-900 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {specs.length === 0 && (
+                <p className="text-sm text-zinc-500">Agrega especificaciones (Material, Peso, etc.)</p>
+              )}
+            </div>
+          </div>
 
-          <p className="text-xs text-gray-500 mt-2">
-            Formatos: JPG, PNG, WebP (máximo 5MB). Cada variante puede tener su propia imagen.
-          </p>
-        </div>
-
-        {/* Botones */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={loading || uploadingImage}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creando...' : 'Crear Producto y Agregar Variantes'}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/admin/products')}
-            disabled={loading || uploadingImage}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 text-gray-700 font-semibold"
-          >
-            Cancelar
-          </button>
+          <div className="flex gap-3 pt-6 border-t border-zinc-100">
+            <button
+              type="submit"
+              disabled={loading || uploadingImage}
+              className="px-4 py-2 bg-zinc-950 text-white text-[12px] font-medium rounded hover:bg-zinc-800 disabled:opacity-50"
+            >
+              {loading ? 'Creando...' : 'Crear'}
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push('/admin/products')}
+              disabled={loading || uploadingImage}
+              className="px-4 py-2 text-[12px] font-medium text-zinc-500 hover:text-zinc-950 disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </form>
     </div>

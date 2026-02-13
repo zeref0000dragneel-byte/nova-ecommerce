@@ -42,22 +42,22 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Panel Admin</h1>
-          <p className="text-gray-600 mt-2">Iniciar sesión para continuar</p>
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="max-w-sm w-full p-8">
+        <div className="mb-8">
+          <h1 className="text-[13px] font-medium text-zinc-950">Admin</h1>
+          <p className="text-[12px] text-zinc-500 mt-1">Iniciar sesión</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-zinc-100 border border-zinc-200 text-zinc-800 px-4 py-3 rounded-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="username" className="block text-sm font-medium text-zinc-700 mb-2">
               Usuario
             </label>
             <input
@@ -66,13 +66,13 @@ export default function AdminLoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
               placeholder="admin"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-700 mb-2">
               Contraseña
             </label>
             <input
@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
               placeholder="••••••••"
             />
           </div>
@@ -89,14 +89,14 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+            className="w-full bg-zinc-950 text-white py-2 text-[12px] font-medium rounded hover:bg-zinc-800 disabled:opacity-50"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <a href="/" className="text-blue-600 hover:text-blue-700 text-sm">
+          <a href="/" className="text-[12px] text-zinc-500 hover:text-zinc-950">
             ← Volver a la tienda
           </a>
         </div>

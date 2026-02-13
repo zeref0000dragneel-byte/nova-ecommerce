@@ -125,18 +125,18 @@ export default function AdminOrderDetailPage({
   };
 
   const statusColors: Record<string, string> = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    PAID: 'bg-green-100 text-green-800',
-    PROCESSING: 'bg-blue-100 text-blue-800',
-    SHIPPED: 'bg-purple-100 text-purple-800',
-    DELIVERED: 'bg-green-100 text-green-800',
-    CANCELLED: 'bg-red-100 text-red-800',
+    PENDING: 'bg-zinc-100 text-zinc-700 border border-zinc-200',
+    PAID: 'bg-zinc-200 text-zinc-900 border border-zinc-200',
+    PROCESSING: 'bg-zinc-200 text-zinc-800 border border-zinc-200',
+    SHIPPED: 'bg-zinc-200 text-zinc-800 border border-zinc-200',
+    DELIVERED: 'bg-zinc-300 text-zinc-900 border border-zinc-200',
+    CANCELLED: 'bg-zinc-100 text-zinc-500 border border-zinc-200',
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Cargando pedido...</div>
+        <div className="text-zinc-600">Cargando pedido...</div>
       </div>
     );
   }
@@ -144,10 +144,10 @@ export default function AdminOrderDetailPage({
   if (!order) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <div className="text-gray-600 mb-4">Pedido no encontrado</div>
+        <div className="text-zinc-600 mb-4">Pedido no encontrado</div>
         <Link
           href="/admin/orders"
-          className="text-blue-600 hover:text-blue-800"
+          className="text-zinc-700 hover:text-zinc-900 transition-colors"
         >
           Volver a pedidos
         </Link>
@@ -161,7 +161,7 @@ export default function AdminOrderDetailPage({
       <div className="mb-6">
         <Link
           href="/admin/orders"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-2 text-zinc-600 hover:text-zinc-900 mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Volver a pedidos
@@ -169,10 +169,10 @@ export default function AdminOrderDetailPage({
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-zinc-900">
               Pedido {order.orderNumber}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-zinc-600 mt-1">
               Creado el{' '}
               {new Date(order.createdAt).toLocaleDateString('es-MX', {
                 year: 'numeric',
@@ -189,7 +189,7 @@ export default function AdminOrderDetailPage({
             {!editingStatus ? (
               <>
                 <span
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold ${
+                  className={`px-4 py-2 rounded-sm text-sm font-semibold ${
                     statusColors[order.status]
                   }`}
                 >
@@ -197,7 +197,7 @@ export default function AdminOrderDetailPage({
                 </span>
                 <button
                   onClick={() => setEditingStatus(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-200 bg-transparent text-zinc-700 rounded-sm hover:bg-zinc-50 transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                   Cambiar estado
@@ -208,7 +208,7 @@ export default function AdminOrderDetailPage({
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-zinc-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400"
                 >
                   {Object.entries(statusLabels).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -219,7 +219,7 @@ export default function AdminOrderDetailPage({
                 <button
                   onClick={handleUpdateStatus}
                   disabled={updating}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-sm hover:bg-zinc-800 transition-colors disabled:bg-zinc-400 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4" />
                   {updating ? 'Guardando...' : 'Guardar'}
@@ -229,7 +229,7 @@ export default function AdminOrderDetailPage({
                     setEditingStatus(false);
                     setNewStatus(order.status);
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-zinc-200 bg-transparent text-zinc-700 rounded-sm hover:bg-zinc-50 transition-colors"
                 >
                   <X className="w-4 h-4" />
                   Cancelar
@@ -244,10 +244,10 @@ export default function AdminOrderDetailPage({
         {/* Contenido principal */}
         <div className="lg:col-span-2 space-y-6">
           {/* Productos */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border border-zinc-200 rounded-sm p-6">
             <div className="flex items-center gap-2 mb-4">
-              <Package className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
+              <Package className="w-5 h-5 text-zinc-600" />
+              <h2 className="text-xl font-semibold text-zinc-900">
                 Productos ({order.items.length})
               </h2>
             </div>
@@ -256,9 +256,9 @@ export default function AdminOrderDetailPage({
               {order.items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 pb-4 border-b last:border-0"
+                  className="flex gap-4 pb-4 border-b border-zinc-200 last:border-0"
                 >
-                  <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="w-20 h-20 bg-zinc-100 rounded-sm overflow-hidden flex-shrink-0 border border-zinc-200">
                     {item.product.imageUrl ? (
                       <Image
                         src={item.product.imageUrl}
@@ -268,7 +268,7 @@ export default function AdminOrderDetailPage({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <div className="w-full h-full flex items-center justify-center text-zinc-400">
                         <Package className="w-8 h-8" />
                       </div>
                     )}
@@ -277,19 +277,19 @@ export default function AdminOrderDetailPage({
                     <Link
                       href={`/shop/${item.product.slug}`}
                       target="_blank"
-                      className="font-semibold text-gray-900 hover:text-blue-600 transition"
+                      className="font-semibold text-zinc-900 hover:text-zinc-700 transition-colors"
                     >
                       {item.product.name}
                     </Link>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-zinc-600 mt-1">
                       Cantidad: {item.quantity}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-zinc-600">
                       Precio unitario: ${item.price.toFixed(2)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900">
+                    <p className="font-bold text-zinc-900">
                       ${(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>
@@ -297,8 +297,8 @@ export default function AdminOrderDetailPage({
               ))}
             </div>
 
-            <div className="mt-6 pt-4 border-t">
-              <div className="flex justify-between text-lg font-bold text-gray-900">
+            <div className="mt-6 pt-4 border-t border-zinc-200">
+              <div className="flex justify-between text-lg font-bold text-zinc-900">
                 <span>Total</span>
                 <span>${order.total.toFixed(2)} MXN</span>
               </div>
@@ -306,30 +306,30 @@ export default function AdminOrderDetailPage({
           </div>
 
           {/* Información del cliente */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white border border-zinc-200 rounded-sm p-6">
             <div className="flex items-center gap-2 mb-4">
-              <User className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
+              <User className="w-5 h-5 text-zinc-600" />
+              <h2 className="text-xl font-semibold text-zinc-900">
                 Información del cliente
               </h2>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-gray-400 mt-0.5" />
+                <User className="w-5 h-5 text-zinc-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-600">Nombre</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-zinc-600">Nombre</p>
+                  <p className="font-medium text-zinc-900">
                     {order.customer.name}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+                <Mail className="w-5 h-5 text-zinc-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-zinc-600">Email</p>
+                  <p className="font-medium text-zinc-900">
                     {order.customer.email}
                   </p>
                 </div>
@@ -337,10 +337,10 @@ export default function AdminOrderDetailPage({
 
               {order.customer.phone && (
                 <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <Phone className="w-5 h-5 text-zinc-400 mt-0.5" />
                   <div>
-                    <p className="text-sm text-gray-600">Teléfono</p>
-                    <p className="font-medium text-gray-900">
+                    <p className="text-sm text-zinc-600">Teléfono</p>
+                    <p className="font-medium text-zinc-900">
                       {order.customer.phone}
                     </p>
                   </div>
@@ -348,10 +348,10 @@ export default function AdminOrderDetailPage({
               )}
 
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                <MapPin className="w-5 h-5 text-zinc-400 mt-0.5" />
                 <div>
-                  <p className="text-sm text-gray-600">Dirección de entrega</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-zinc-600">Dirección de entrega</p>
+                  <p className="font-medium text-zinc-900">
                     {order.shippingAddress || order.customer.address || 'No especificada'}
                   </p>
                 </div>
@@ -362,27 +362,27 @@ export default function AdminOrderDetailPage({
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="bg-white border border-zinc-200 rounded-sm p-6 sticky top-4">
+            <h2 className="text-xl font-semibold text-zinc-900 mb-4">
               Resumen
             </h2>
 
             <div className="space-y-4">
-              <div className="flex items-center gap-3 pb-3 border-b">
-                <Calendar className="w-5 h-5 text-gray-400" />
+              <div className="flex items-center gap-3 pb-3 border-b border-zinc-200">
+                <Calendar className="w-5 h-5 text-zinc-400" />
                 <div>
-                  <p className="text-sm text-gray-600">Fecha del pedido</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-zinc-600">Fecha del pedido</p>
+                  <p className="font-medium text-zinc-900">
                     {new Date(order.createdAt).toLocaleDateString('es-MX')}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pb-3 border-b">
-                <Package className="w-5 h-5 text-gray-400" />
+              <div className="flex items-center gap-3 pb-3 border-b border-zinc-200">
+                <Package className="w-5 h-5 text-zinc-400" />
                 <div>
-                  <p className="text-sm text-gray-600">Productos</p>
-                  <p className="font-medium text-gray-900">
+                  <p className="text-sm text-zinc-600">Productos</p>
+                  <p className="font-medium text-zinc-900">
                     {order.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
                     unidades
                   </p>
@@ -390,21 +390,21 @@ export default function AdminOrderDetailPage({
               </div>
 
               <div className="flex items-center gap-3">
-                <DollarSign className="w-5 h-5 text-gray-400" />
+                <DollarSign className="w-5 h-5 text-zinc-400" />
                 <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-zinc-600">Total</p>
+                  <p className="text-2xl font-bold text-zinc-900">
                     ${order.total.toFixed(2)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t">
+            <div className="mt-6 pt-6 border-t border-zinc-200">
               <Link
                 href={`/orders/${order.id}/confirmation`}
                 target="_blank"
-                className="block w-full text-center bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                className="block w-full text-center bg-black text-white py-3 rounded-sm hover:bg-zinc-800 transition-colors font-medium"
               >
                 Ver como cliente
               </Link>

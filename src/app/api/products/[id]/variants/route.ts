@@ -33,7 +33,7 @@ export async function POST(
     const { id } = await params;
     const body = await request.json();
 
-    const { color, size, sku, price, stock, imageUrl } = body;
+    const { color, size, sku, price, stock, images } = body;
 
     // Validaciones
     if (!color && !size) {
@@ -64,7 +64,7 @@ export async function POST(
         sku: sku || null,
         price: price ? parseFloat(price) : null,
         stock: stock ? parseInt(stock) : 0,
-        imageUrl: imageUrl || null,
+        images: Array.isArray(images) ? images.filter((u: string) => typeof u === 'string') : [],
       },
     });
 
