@@ -42,7 +42,10 @@ export default function SalesChart({ data }: { data: WeeklySalesPoint[] }) {
               borderRadius: '6px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
-            formatter={(value: number) => [`$${value.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, 'Ventas']}
+            formatter={(value: number | undefined) => {
+              if (value === undefined) return ['$0', 'Ventas'];
+              return [`$${value.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, 'Ventas'];
+            }}
             labelStyle={{ color: '#71717a' }}
           />
           <Line
