@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X, Package } from "lucide-react";
 import type { CartItem as CartItemType } from "@/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext";
 
 interface CartItemProps {
   item: CartItemType;
@@ -16,6 +17,7 @@ export default function CartItem({
   onUpdateQuantity,
   onRemove,
 }: CartItemProps) {
+  const { setIsOpen } = useCart();
   const subtotal = item.price * item.quantity;
   const variantText = [item.color, item.size].filter(Boolean).join(" · ");
 
@@ -24,6 +26,7 @@ export default function CartItem({
       {/* Imagen Minimalista */}
       <Link
         href={item.slug ? `/shop/${item.slug}` : "#"}
+        onClick={() => setIsOpen(false)}
         className="relative w-20 h-20 flex-shrink-0 rounded-none border border-zinc-100 dark:border-zinc-800 overflow-hidden bg-zinc-50 dark:bg-zinc-900"
       >
         {item.image ? (
@@ -46,6 +49,7 @@ export default function CartItem({
         <div>
           <Link
             href={item.slug ? `/shop/${item.slug}` : "#"}
+            onClick={() => setIsOpen(false)}
             className="text-[13px] font-medium text-foreground uppercase tracking-tight line-clamp-1 hover:text-zinc-500 transition-colors"
           >
             {item.name}

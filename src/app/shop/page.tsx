@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Package } from "lucide-react";
 import type { Metadata } from "next";
 import { ShopToolbar } from "@/components/ShopToolbar";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export const metadata: Metadata = {
   title: "Tienda",
@@ -68,6 +69,7 @@ export default async function ShopPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <ScrollToTop />
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
