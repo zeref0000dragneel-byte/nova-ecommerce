@@ -74,11 +74,13 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     ? product.images
     : product.imageUrl ? [product.imageUrl] : [];
 
+  const [displayImage, setDisplayImage] = useState<string>(
+    productImages[0] || product.imageUrl || ''
+  );
+
   const variantImages = selectedVariant?.images?.length ? selectedVariant.images : [];
   const displayImages =
     hasVariants && variantImages.length > 0 ? variantImages : productImages;
-
-  const currentImage = displayImages[selectedImageIndex] || displayImages[0];
 
   const colors = hasVariants
     ? Array.from(
@@ -95,14 +97,15 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const currentPrice = selectedVariant?.price ?? product.price;
   const currentStock = selectedVariant?.stock ?? product.stock;
   const specs = product.specs && product.specs.length > 0 ? product.specs : [];
-  const displayImage = currentImage || product.imageUrl || product.images?.[0];
   const onSale = product.comparePrice != null && product.comparePrice > currentPrice;
 
   const handleVariantClick = (variant: Variant) => {
     if (selectedVariant?.id === variant.id) {
       setSelectedVariant(null);
+      setDisplayImage(productImages[0] || product.imageUrl || '');
     } else {
       setSelectedVariant(variant);
+      setDisplayImage(variant.images?.[0] || productImages[0] || product.imageUrl || '');
     }
     setSelectedImageIndex(0);
   };
@@ -130,62 +133,95 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     setTimeout(() => setIsAdding(false), 1000);
   };
 
+  const galleryImages = displayImages.length > 1 ? displayImages : productImages;
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Imagen Principal - Full Width en Móvil */}
-      <div className="relative aspect-square lg:aspect-[4/3] bg-gray-100">
-        {displayImage ? (
-          <Image
-            src={displayImage}
-            alt={product.name}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-            <Package className="w-32 h-32" />
-          </div>
-        )}
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
 
-      {/* Contenido Principal */}
-      <div className="px-4 py-6 lg:px-8 lg:py-8 max-w-7xl mx-auto">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-12">
-          {/* Columna Izquierda - Info del Producto */}
-          <div className="lg:order-2">
+          {/* COLUMNA IZQUIERDA - GALERÍA DE IMÁGENES */}
+          <div className="lg:sticky lg:top-24 lg:h-fit">
+            {/* Imagen Principal */}
+            <div className="relative aspect-square bg-gray-100 rounded-sm overflow-hidden mb-4">
+              {displayImage ? (
+                <Image
+                  src={displayImage}
+                  alt={product.name}
+                  fill
+                  priority
+                  quality={95}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 50vw"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                  <Package className="w-32 h-32" />
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            {galleryImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {galleryImages.map((img, index) => (
+                  <button
+                    key={`${img}-${index}`}
+                    type="button"
+                    onClick={() => setDisplayImage(img)}
+                    className={`relative aspect-square bg-gray-100 rounded-sm overflow-hidden transition-all ${
+                      displayImage === img
+                        ? 'ring-2 ring-black'
+                        : 'hover:ring-2 hover:ring-gray-300'
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`${product.name} - Vista ${index + 1}`}
+                      fill
+                      quality={90}
+                      sizes="(max-width: 1024px) 25vw, 150px"
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* COLUMNA DERECHA - INFORMACIÓN */}
+          <div className="space-y-4 lg:space-y-6">
             {/* Breadcrumb */}
             {product.category && (
-              <p className="text-xs uppercase tracking-widest text-gray-400 mb-3">
+              <p className="text-[10px] uppercase tracking-widest text-gray-400">
                 {product.category.name}
               </p>
             )}
 
-            {/* Título */}
-            <h1 className="text-2xl lg:text-4xl font-bold tracking-tight text-black mb-4">
-              {product.name}
-            </h1>
-
-            {/* Precio */}
-            <div className="mb-6">
-              <p className="text-3xl font-bold text-black">
-                ${currentPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              </p>
-              {onSale && product.comparePrice != null && (
-                <p className="text-sm text-gray-500 line-through mt-1">
-                  ${product.comparePrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+            {/* Título + Precio */}
+            <div>
+              <h1 className="text-2xl lg:text-4xl font-bold tracking-tight text-black mb-3">
+                {product.name}
+              </h1>
+              <div className="flex items-baseline gap-3">
+                <p className="text-3xl font-bold text-black">
+                  ${currentPrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </p>
-              )}
+                {onSale && product.comparePrice != null && (
+                  <p className="text-base text-gray-400 line-through">
+                    ${product.comparePrice.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Selectores de Variante */}
+            {/* Variantes */}
             {hasVariants && (colors.length > 0 || sizes.length > 0) && (
-              <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
+              <div className="space-y-4 py-4 border-y border-gray-200">
                 {colors.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-black mb-3">
-                      Color
+                    <label className="block text-sm font-medium text-black mb-2">
+                      Color {selectedVariant?.color && `— ${selectedVariant.color}`}
                     </label>
                     <div className="flex gap-2">
                       {colors.map((color) => {
@@ -201,7 +237,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                             className={`w-8 h-8 rounded-full transition-all ${
                               isSelected
                                 ? 'ring-2 ring-black ring-offset-2'
-                                : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-2'
+                                : 'hover:ring-2 hover:ring-gray-300'
                             }`}
                             style={{ backgroundColor: hex }}
                           />
@@ -213,9 +249,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
 
                 {sizes.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-black mb-3">
-                      Tamaño
-                    </label>
+                    <label className="block text-sm font-medium text-black mb-2">Tamaño</label>
                     <div className="flex gap-2">
                       {sizes.map((size) => {
                         const variant = product.variants.find(
@@ -236,7 +270,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                                 ? 'bg-black text-white'
                                 : isDisabled
                                   ? 'border border-gray-300 text-gray-400 cursor-not-allowed'
-                                  : 'border border-gray-300 text-black hover:border-black'
+                                  : 'border border-gray-300 hover:border-black'
                             }`}
                           >
                             {size}
@@ -247,51 +281,44 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                   </div>
                 )}
 
-                <p className="text-sm text-gray-600">
-                  {currentStock} disponibles
-                </p>
+                <p className="text-sm text-gray-600">{currentStock} disponibles</p>
               </div>
             )}
 
-            {/* Selector de Cantidad */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-black mb-3">
-                Cantidad
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-sm w-fit">
-                <button
-                  type="button"
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 1}
-                  className="px-4 py-3 text-gray-600 hover:text-black disabled:opacity-30 transition-colors"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="px-6 py-3 text-sm font-medium min-w-[3rem] text-center">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={incrementQuantity}
-                  disabled={quantity >= currentStock}
-                  className="px-4 py-3 text-gray-600 hover:text-black disabled:opacity-30 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {/* Cantidad + Botón */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-black mb-2">Cantidad</label>
+                <div className="flex items-center border border-gray-300 rounded-sm w-fit">
+                  <button
+                    type="button"
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                    className="px-3 py-2 hover:bg-gray-50 disabled:opacity-30"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="px-6 py-2 text-sm font-medium">{quantity}</span>
+                  <button
+                    type="button"
+                    onClick={incrementQuantity}
+                    disabled={quantity >= currentStock}
+                    className="px-3 py-2 hover:bg-gray-50 disabled:opacity-30"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            {/* Botón Agregar al Carrito - Sticky en Móvil */}
-            <div className="sticky bottom-4 lg:static z-10">
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isAdding || currentStock === 0}
-                className="w-full bg-black text-white py-4 rounded-sm font-medium text-sm hover:bg-gray-900 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg lg:shadow-none"
+                className="w-full bg-black text-white py-3.5 rounded-sm font-medium text-sm hover:bg-gray-900 active:scale-[0.98] transition-all disabled:opacity-50"
               >
                 {isAdding ? (
                   <span className="flex items-center justify-center gap-2">
-                    <Check className="w-5 h-5 animate-in zoom-in-50" />
+                    <Check className="w-4 h-4" />
                     Agregado
                   </span>
                 ) : currentStock === 0 ? (
@@ -303,7 +330,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
             </div>
 
             {/* Features */}
-            <div className="mt-6 space-y-3 text-sm text-gray-600">
+            <div className="grid grid-cols-1 gap-2 text-sm text-gray-600 py-4 border-t border-gray-200">
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4" />
                 <span>Envío express asegurado</span>
@@ -317,25 +344,24 @@ export default function ProductDetailClient({ product }: { product: Product }) {
                 <span>Packaging 100% reciclable</span>
               </div>
             </div>
-          </div>
 
-          {/* Columna Derecha - Descripción y Specs */}
-          <div className="lg:order-1 mt-12 lg:mt-0 space-y-8">
+            {/* Descripción */}
             {product.description && (
-              <div>
-                <h2 className="text-lg font-semibold text-black mb-3">Descripción</h2>
-                <p className="text-gray-600 leading-relaxed">{product.description}</p>
+              <div className="pt-4 border-t border-gray-200">
+                <h2 className="text-base font-semibold mb-2">Descripción</h2>
+                <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
               </div>
             )}
 
+            {/* Especificaciones */}
             {specs.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-black mb-4">ESPECIFICACIONES</h2>
-                <div className="space-y-3">
+              <div className="pt-4 border-t border-gray-200">
+                <h2 className="text-base font-semibold mb-3">ESPECIFICACIONES</h2>
+                <div className="space-y-2">
                   {specs.map((spec, idx) => (
-                    <div key={idx} className="flex justify-between py-3 border-b border-gray-100">
-                      <span className="text-sm text-gray-600 capitalize">{spec.attribute}</span>
-                      <span className="text-sm font-medium text-black">{spec.value}</span>
+                    <div key={idx} className="flex justify-between text-sm py-2 border-b border-gray-100 last:border-0">
+                      <span className="text-gray-600 capitalize">{spec.attribute}</span>
+                      <span className="font-medium text-black">{spec.value}</span>
                     </div>
                   ))}
                 </div>
